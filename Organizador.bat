@@ -1,0 +1,2 @@
+python organizador_sebrae.py
+pause
