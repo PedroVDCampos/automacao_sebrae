@@ -20,26 +20,23 @@ from selenium.webdriver.common.action_chains import ActionChains
 from datetime import datetime, timedelta
 
 def resource_path(relative_path):
-    """ Pega o caminho absoluto do arquivo, funcionando tanto no Python quanto no .exe """
     try:
-        # O PyInstaller cria uma pasta temporária e guarda o caminho no _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
 
-# ==========================================
-# CONFIGURAÇÕES INICIAIS
-# ==========================================
-URL_RAE = "https://atendimento.sp.sebrae.com.br/Acesso/Login?ReturnUrl=%2f" # Confirme se é este o link exato de login
+
+    # CONFIGURAÇÕES INICIAIS
+
+URL_RAE = "https://atendimento.sp.sebrae.com.br/Acesso/Login?ReturnUrl=%2f" 
 cnpjs_com_erro = []
 
-# ==========================================
-# 1. FUNÇÕES DE EXTRAÇÃO (PDF E NOME)
-# ==========================================
+
+    # 1. FUNÇÕES DE EXTRAÇÃO (PDF E NOME)
+
 def limpar_documento(texto):
-    # Remove tudo que não for número do CNPJ/CPF
     return re.sub(r'\D', '', texto)
 
 def ler_pdf_padrao(caminho_pdf, identificador_nome):
@@ -56,7 +53,6 @@ def ler_pdf_padrao(caminho_pdf, identificador_nome):
                     nome_limpo = re.sub(r'^[\d.\-/]+\s*', '', nome_bruto).strip()
                     nome_limpo = re.sub(r'\s*[\d.\-/]+$', '', nome_limpo).strip()
             
-            # Tenta achar um CNPJ no texto todo
             match_cnpj = re.search(r'\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}', texto)
             if match_cnpj:
                 cnpj = limpar_documento(match_cnpj.group())
@@ -82,32 +78,28 @@ def ler_boleto_parcelamento(caminho_pdf):
         pass
     return "Cliente_Parcelamento", ""
 
-# ==========================================
-# 2. ROBÔ WEB (SELENIUM)
-# ==========================================
+
+    # 2. ROBÔ WEB (SELENIUM)
+
 def registrar_no_rae(driver, dados):
     wait = WebDriverWait(driver, 10)
     
     try:
-        # 1. Expandir a aba Pessoa Jurídica
         aba_pj = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'Pessoa Jurídica')]")))
         aba_pj.click()
         time.sleep(1)
 
-        # 2. Pesquisa Cliente pelo CNPJ e aperta ENTER
         campo_cnpj = wait.until(EC.visibility_of_element_located((By.ID, "CNPJ")))
         campo_cnpj.clear()
         campo_cnpj.send_keys(dados['cnpj'])
         time.sleep(0.5) 
         campo_cnpj.send_keys(Keys.ENTER) 
         time.sleep(2)
-        
-        # Verifica erro de cadastro 
+
         if "Nenhum registro encontrado" in driver.page_source or "desatualizado" in driver.page_source.lower():
             cnpjs_com_erro.append(dados['cnpj'])
             return 
-        
-        # 3. Clica no Lápis (Alterar)
+
         try:
             lapis = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "i.fa-pencil")))
             lapis.click()
@@ -116,12 +108,10 @@ def registrar_no_rae(driver, dados):
             return
 
         time.sleep(2)
-        
-        # Rolar a página para baixo
+
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(1) 
 
-        # 4. Prosseguir e Confirmar
         btn_prosseguir = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'PROSSEGUIR COM ATENDIMENTO')]")))
         btn_prosseguir.click()
         
@@ -131,7 +121,7 @@ def registrar_no_rae(driver, dados):
         driver.execute_script("arguments[0].click();", btn_sim)
         time.sleep(2.5)
         
-        # === PASSO 5: SELEÇÃO DA PESSOA FÍSICA ===
+     # PASSO 5: SELEÇÃO DA PESSOA FÍSICA 
         try:
             time.sleep(2) 
             primeira_celula = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#dtPf tbody tr td")))
@@ -152,12 +142,12 @@ def registrar_no_rae(driver, dados):
             time.sleep(3)
             return
 
-        # ==========================================
+        
         # TELA DE PREENCHIMENTO DO ATENDIMENTO (FINAL)
-        # ==========================================
+        
         time.sleep(3)
         
-        # --- CANAL ---
+        # CANAL
         canal_combobox = wait.until(EC.presence_of_element_located((By.XPATH, "//span[@aria-labelledby='select2-CanalRelacionado_IdCanal-container']")))
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", canal_combobox)
         time.sleep(1)
@@ -177,7 +167,7 @@ def registrar_no_rae(driver, dados):
                 caixa.send_keys(Keys.ENTER)
                 break
         
-        # --- LOCAL DE EXECUÇÃO ---
+        # LOCAL DE EXECUÇÃO
         time.sleep(2)
         
         local_combobox = wait.until(EC.presence_of_element_located((By.XPATH, "//span[@aria-labelledby='select2-CanalRelacionado_IdLocalExecucao-container']")))
@@ -208,7 +198,7 @@ def registrar_no_rae(driver, dados):
         
         time.sleep(1)
 
-        # --- BUSCA DO SERVIÇO ---
+        # BUSCA DO SERVIÇO 
         campo_busca = wait.until(EC.presence_of_element_located((By.ID, "palavra-pesquisa-input")))
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", campo_busca)
         time.sleep(0.5)
@@ -245,7 +235,7 @@ def registrar_no_rae(driver, dados):
         driver.execute_script("arguments[0].click();", btn_adicionar_servico)
         time.sleep(2) 
         
-        # --- PREENCHIMENTO DOS DADOS FINAIS ---
+        #  PREENCHIMENTO DOS DADOS FINAIS 
         driver.execute_script("window.scrollBy(0, 400);")
         time.sleep(1)
         
@@ -256,7 +246,7 @@ def registrar_no_rae(driver, dados):
         driver.execute_script("arguments[0].dispatchEvent(new Event('change'));", campo_necessidade)
         time.sleep(1)
         
-        # --- PLANO ORÇAMENTÁRIO ---
+        #  PLANO ORÇAMENTÁRIO 
         driver.execute_script("window.scrollBy(0, 400);")
         time.sleep(1)
         
@@ -280,10 +270,9 @@ def registrar_no_rae(driver, dados):
             
         btn_selecionar_plano = wait.until(EC.presence_of_element_located((By.ID, "btnSalvarPlano")))
         driver.execute_script("arguments[0].click();", btn_selecionar_plano)
-        
-        # ---------------------------------------------------------
+          
         # LÓGICA FINAL: LANÇAMENTO RETROATIVO E SALVAMENTO
-        # ---------------------------------------------------------
+        
         driver.execute_script("window.scrollBy(0, 600);")
         time.sleep(1)
         
@@ -297,16 +286,12 @@ def registrar_no_rae(driver, dados):
             str_hora_ini = data_arq.strftime("%H:%M")
             str_hora_fim = (data_arq + timedelta(minutes=2)).strftime("%H:%M")
             
-            # 1. Garante que a aba Lançamento Retroativo está aberta
             try:
                 aba_retroativo = wait.until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'panel-heading') and contains(text(), 'Lançamento Retroativo')]")))
                 driver.execute_script("arguments[0].click();", aba_retroativo)
                 time.sleep(1)
             except:
                 pass
-            
-            # 2. Preenche os campos usando os IDs exatos que você encontrou no HTML!
-            # Como esses campos têm máscaras (99/99/9999), o send_keys (teclado humano) funciona melhor que a injeção JS
             
             campo_data = wait.until(EC.presence_of_element_located((By.ID, "LancamentoRetroativoOT_Data")))
             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", campo_data)
@@ -326,22 +311,19 @@ def registrar_no_rae(driver, dados):
             campo_motivo.clear()
             campo_motivo.send_keys("Problema no sistema")
             
-            time.sleep(1.5) # Pausa para garantir que as máscaras de texto do site formataram tudo certo
-            
-        # SALVAR ATENDIMENTO
+            time.sleep(1.5) 
+
         btn_salvar = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'salvar atendimento', 'SALVAR ATENDIMENTO'), 'SALVAR ATENDIMENTO')]")))
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn_salvar)
         time.sleep(1)
         driver.execute_script("arguments[0].click();", btn_salvar)
-        
-        # FINALIZAR
+
         time.sleep(3) 
         btn_finalizar = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'finalizar', 'FINALIZAR'), 'FINALIZAR')]")))
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn_finalizar)
         time.sleep(1)
         driver.execute_script("arguments[0].click();", btn_finalizar)
-        
-        # VOLTAR PARA O INÍCIO (Recomeçar)
+
         time.sleep(3)
         try:
             btn_voltar = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'voltar', 'VOLTAR'), 'VOLTAR') or @title='Voltar']")))
@@ -355,9 +337,9 @@ def registrar_no_rae(driver, dados):
         driver.get(URL_RAE) 
         time.sleep(3)
 
-# ==========================================
+
 # 3. LÓGICA PRINCIPAL (ORQUESTRAÇÃO)
-# ==========================================
+
 def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str):
     try:
         data_corte = datetime.strptime(data_corte_str, "%d/%m/%Y")
@@ -365,13 +347,11 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str):
         messagebox.showerror("Erro", "Formato de data inválido. Use DD/MM/AAAA.")
         return
 
-    # Inicia o Navegador
     servico = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=servico)
     driver.maximize_window()
     driver.get(URL_RAE)
     
-    # Pausa o código para o humano logar
     messagebox.showinfo("Ação Necessária", "1. O navegador foi aberto.\n2. Faça o login no RAE.\n3. Quando estiver na tela de 'Pesquisa Clientes', clique em OK nesta janela para o robô começar.")
     
     arquivos_movidos = 0
@@ -383,7 +363,6 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str):
             
         caminho_completo = os.path.join(pasta_origem, nome_arquivo)
         
-        # Filtro de Data
         data_criacao = os.path.getmtime(caminho_completo)
         data_formatada = datetime.fromtimestamp(data_criacao)
         
@@ -396,7 +375,6 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str):
         palavra_chave = ""
         servico_exato = ""
 
-        # Identificação e Extração
         if nome_arquivo.startswith("CCMEI-"):
             servico_nome = "Formalizacao"
             palavra_chave = "formalização"
@@ -434,7 +412,6 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str):
                 palavra_chave = "baixa"
                 servico_exato = "Baixa de Inscrição no CNPJ"
 
-        # Execução: Organiza e Registra
         if servico_nome and cnpj_cliente:
             ano = str(data_formatada.year)
             mes = data_formatada.strftime('%m')
@@ -454,8 +431,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str):
                     'servico_exato': servico_exato,
                     'data_arquivo': data_formatada
                 }
-                
-                # Manda o robô registrar
+
                 registrar_no_rae(driver, dados_atendimento)
 
     driver.quit()
@@ -467,13 +443,9 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str):
     else:
         messagebox.showinfo("Sucesso!", f"Processo concluído!\n\n{arquivos_movidos} arquivo(s) organizado(s) e registrado(s).")
 
-# ==========================================
-# 4. INTERFACE GRÁFICA (CUSTOM TKINTER)
-# ==========================================
 
-# Configuração de Estilo (Aqui você escolhe entre a Opção 1 ou Opção 2 da sua imagem)
-# Mude para "Light" se quiser o Estilo Corporativo Limpo (Opção 1)
-# Mude para "Dark" se quiser o Estilo Tech/Dashboard (Opção 2)
+# 4. INTERFACE GRÁFICA (CUSTOM TKINTER)
+
 ctk.set_appearance_mode("Dark") 
 ctk.set_default_color_theme("blue") 
 
@@ -498,7 +470,6 @@ def iniciar():
         messagebox.showwarning("Atenção", "Preencha todas as pastas e a data de corte!")
         return
 
-    # Usamos .configure no ctk em vez de .config
     btn_iniciar.configure(text="Robô Trabalhando...", state="disabled")
     janela.update() 
     
@@ -510,7 +481,6 @@ def iniciar():
 janela = ctk.CTk()
 janela.title("Super Organizador e Robô RAE - Sebrae")
 
-# ---> ALTERE A LINHA DO ÍCONE PARA FICAR ASSIM: <---
 janela.iconbitmap(resource_path("icone.ico"))
 
 # Frame principal para dar aquele espaçamento elegante nas bordas
@@ -522,7 +492,7 @@ frame_principal.grid_columnconfigure(0, weight=1)
 titulo = ctk.CTkLabel(frame_principal, text="Robô de Atendimentos", font=ctk.CTkFont(size=24, weight="bold"))
 titulo.grid(row=0, column=0, pady=(0, 30))
 
-# --- Grupo: Origem ---
+#  Grupo: Origem 
 lbl_origem = ctk.CTkLabel(frame_principal, text="Origem (Downloads):", font=ctk.CTkFont(size=14))
 lbl_origem.grid(row=1, column=0, sticky="w", pady=(0, 5))
 
@@ -536,7 +506,7 @@ entrada_origem.grid(row=0, column=0, sticky="ew", padx=(0, 10))
 btn_origem = ctk.CTkButton(frame_origem, text="Procurar", width=100, height=35, fg_color="gray50", hover_color="gray40", command=selecionar_origem)
 btn_origem.grid(row=0, column=1)
 
-# --- Grupo: Destino ---
+#  Grupo: Destino 
 lbl_destino = ctk.CTkLabel(frame_principal, text="Destino (Sebrae_Organizados):", font=ctk.CTkFont(size=14))
 lbl_destino.grid(row=3, column=0, sticky="w", pady=(0, 5))
 
@@ -550,7 +520,7 @@ entrada_destino.grid(row=0, column=0, sticky="ew", padx=(0, 10))
 btn_destino = ctk.CTkButton(frame_destino, text="Procurar", width=100, height=35, fg_color="gray50", hover_color="gray40", command=selecionar_destino)
 btn_destino.grid(row=0, column=1)
 
-# --- Grupo: Data ---
+#  Grupo: Data 
 lbl_data = ctk.CTkLabel(frame_principal, text="Processar apenas arquivos a partir de (DD/MM/AAAA):", font=ctk.CTkFont(size=14))
 lbl_data.grid(row=5, column=0, sticky="w", pady=(0, 5))
 
@@ -558,7 +528,7 @@ entrada_data = ctk.CTkEntry(frame_principal, width=150, height=35)
 entrada_data.insert(0, "01/04/2026")
 entrada_data.grid(row=6, column=0, sticky="w", pady=(0, 30))
 
-# --- Botão Iniciar ---
+#  Botão Iniciar 
 btn_iniciar = ctk.CTkButton(frame_principal, text="Iniciar Automação", font=ctk.CTkFont(size=16, weight="bold"), height=50, command=iniciar)
 btn_iniciar.grid(row=7, column=0, sticky="ew")
 
