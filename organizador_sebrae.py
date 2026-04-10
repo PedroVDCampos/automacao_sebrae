@@ -142,45 +142,56 @@ def registrar_no_rae(driver, dados):
         # ==========================================
         # TELA DE PREENCHIMENTO DO ATENDIMENTO (FINAL)
         # ==========================================
-        # Pausa inicial para a tela carregar
         time.sleep(3)
         
         # --- CANAL ---
-        # Foca no combobox (que é a estrutura que aceita o clique corretamente)
         canal_combobox = wait.until(EC.presence_of_element_located((By.XPATH, "//span[@aria-labelledby='select2-CanalRelacionado_IdCanal-container']")))
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", canal_combobox)
         time.sleep(1)
         
-        # Tenta o clique padrão, se a barra bloquear, usa o JS
         try:
             canal_combobox.click()
         except:
             driver.execute_script("arguments[0].click();", canal_combobox)
             
-        time.sleep(1) # Espera a barrinha de pesquisa descer
+        time.sleep(1.5)
         
-        # Usamos visibility_of_element_located para garantir que a barra já desceu
-        busca_canal = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "input.select2-search__field")))
-        busca_canal.send_keys("Sebrae Aqui") # AJUSTE AQUI SE O CANAL FOR OUTRO
-        time.sleep(1)
-        busca_canal.send_keys(Keys.ENTER)
+        caixas_pesquisa = driver.find_elements(By.CSS_SELECTOR, "input.select2-search__field")
+        for caixa in caixas_pesquisa:
+            if caixa.is_displayed():
+                caixa.send_keys("Sebrae Aqui") 
+                time.sleep(1)
+                caixa.send_keys(Keys.ENTER)
+                break
         
         # --- LOCAL DE EXECUÇÃO ---
+        time.sleep(2)
+        
         local_combobox = wait.until(EC.presence_of_element_located((By.XPATH, "//span[@aria-labelledby='select2-CanalRelacionado_IdLocalExecucao-container']")))
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", local_combobox)
-        time.sleep(1)
+        time.sleep(0.5)
         
-        try:
-            local_combobox.click()
-        except:
-            driver.execute_script("arguments[0].click();", local_combobox)
-            
-        time.sleep(1)
+        clicou_local = False
+        for tentativa in range(5):
+            try:
+                local_combobox.click()
+                clicou_local = True
+                break 
+            except:
+                time.sleep(1.5)
+                
+        if not clicou_local:
+             driver.execute_script("arguments[0].click();", local_combobox)
+             
+        time.sleep(1.5)
         
-        busca_local = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "input.select2-search__field")))
-        busca_local.send_keys("SEBRAE AQUI - SÃO MIGUEL ARCANJO") 
-        time.sleep(1)
-        busca_local.send_keys(Keys.ENTER)
+        caixas_pesquisa = driver.find_elements(By.CSS_SELECTOR, "input.select2-search__field")
+        for caixa in caixas_pesquisa:
+            if caixa.is_displayed():
+                caixa.send_keys("SEBRAE AQUI - SÃO MIGUEL ARCANJO") 
+                time.sleep(1)
+                caixa.send_keys(Keys.ENTER)
+                break
         
         time.sleep(1)
 
@@ -188,17 +199,27 @@ def registrar_no_rae(driver, dados):
         campo_busca = wait.until(EC.presence_of_element_located((By.ID, "palavra-pesquisa-input")))
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", campo_busca)
         time.sleep(0.5)
+        
         campo_busca.clear()
         campo_busca.send_keys(dados['palavra_chave'])
+        time.sleep(0.5) 
+        campo_busca.send_keys(Keys.ENTER)
+        time.sleep(1) 
         
-        btn_efetuar_busca = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'EFETUAR BUSCA')]")))
-        driver.execute_script("arguments[0].click();", btn_efetuar_busca)
+        try:
+            btn_efetuar_busca = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'efetuar busca', 'EFETUAR BUSCA'), 'EFETUAR BUSCA')]")))
+            try:
+                btn_efetuar_busca.click() 
+            except:
+                driver.execute_script("arguments[0].click();", btn_efetuar_busca) 
+        except:
+            pass 
         
         xpath_opcao = f"//select[@id='ServicosDisponiveis']//option[contains(text(), '{dados['servico_exato']}')]"
         try:
             wait.until(EC.presence_of_element_located((By.XPATH, xpath_opcao)))
         except:
-            raise Exception(f"Demorou demais! O serviço '{dados['servico_exato']}' não carregou na caixa de seleção.")
+            raise Exception(f"Demorou demais! O serviço '{dados['servico_exato']}' não carregou.")
         
         caixa_servicos = driver.find_element(By.ID, "ServicosDisponiveis")
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", caixa_servicos)
@@ -209,57 +230,116 @@ def registrar_no_rae(driver, dados):
         
         btn_adicionar_servico = wait.until(EC.presence_of_element_located((By.XPATH, "//i[contains(@class, 'frente')]/parent::*")))
         driver.execute_script("arguments[0].click();", btn_adicionar_servico)
-        time.sleep(1) 
+        time.sleep(2) 
         
         # --- PREENCHIMENTO DOS DADOS FINAIS ---
-        campo_necessidade = wait.until(EC.presence_of_element_located((By.XPATH, "//textarea[contains(@id, 'necessidade') or contains(@name, 'necessidade')]")))
-        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", campo_necessidade)
-        time.sleep(0.5)
-        campo_necessidade.clear()
-        campo_necessidade.send_keys(dados['servico_exato'])
+        driver.execute_script("window.scrollBy(0, 400);")
+        time.sleep(1)
         
-        btn_plano = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'INCLUIR PLANO')]")))
+        # Necessidade do Cliente
+        campo_necessidade = wait.until(EC.presence_of_element_located((By.XPATH, "//textarea[contains(@id, 'Necessidade') or contains(@name, 'Necessidade')]")))
+        texto_necessidade = dados['servico_exato']
+        driver.execute_script(f"arguments[0].value = '{texto_necessidade}';", campo_necessidade)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('change'));", campo_necessidade)
+        time.sleep(1)
+        
+        # --- PLANO ORÇAMENTÁRIO ---
+        driver.execute_script("window.scrollBy(0, 400);")
+        time.sleep(1)
+        
+        btn_plano = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'incluir plano orçamentário', 'INCLUIR PLANO ORÇAMENTÁRIO'), 'INCLUIR PLANO ORÇAMENTÁRIO')]")))
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn_plano)
-        time.sleep(0.5)
+        time.sleep(1)
         driver.execute_script("arguments[0].click();", btn_plano)
         
-        select_unidade = wait.until(EC.presence_of_element_located((By.ID, "select2-UnidadeModal-container")))
-        driver.execute_script("arguments[0].click();", select_unidade)
-        time.sleep(0.5)
-        
-        busca_unidade = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input.select2-search__field")))
-        busca_unidade.send_keys("Sorocaba")
-        time.sleep(1)
-        busca_unidade.send_keys(Keys.ENTER)
-        
-        btn_selecionar_plano = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'SELECIONAR')]")))
+        time.sleep(2)
+        try:
+            driver.execute_script("$('#UnidadeModal').val('31').trigger('change');")
+            time.sleep(2) 
+            driver.execute_script("$('#AnoModal').val('2026').trigger('change');")
+            time.sleep(1)
+            driver.execute_script("$('#PlanoModal').val('82').trigger('change');")
+            time.sleep(2) 
+            driver.execute_script("$('#AcaoModal').val('260395547').trigger('change');")
+            time.sleep(1.5)
+        except Exception as e:
+            print(f"Atenção: Falha na injeção direta do plano orçamentário. Erro: {e}")
+            
+        btn_selecionar_plano = wait.until(EC.presence_of_element_located((By.ID, "btnSalvarPlano")))
         driver.execute_script("arguments[0].click();", btn_selecionar_plano)
         
+        # ---------------------------------------------------------
+        # LÓGICA FINAL: LANÇAMENTO RETROATIVO E SALVAMENTO
+        # ---------------------------------------------------------
+        driver.execute_script("window.scrollBy(0, 600);")
         time.sleep(1)
-        btn_salvar = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'SALVAR ATENDIMENTO')]")))
+        
+        data_hoje = datetime.now().date()
+        data_arq = dados['data_arquivo']
+        
+        if data_arq.date() != data_hoje:
+            print("Atendimento retroativo detectado. Preenchendo horários...")
+            
+            str_data = data_arq.strftime("%d/%m/%Y")
+            str_hora_ini = data_arq.strftime("%H:%M")
+            str_hora_fim = (data_arq + timedelta(minutes=2)).strftime("%H:%M")
+            
+            # 1. Garante que a aba Lançamento Retroativo está aberta
+            try:
+                aba_retroativo = wait.until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'panel-heading') and contains(text(), 'Lançamento Retroativo')]")))
+                driver.execute_script("arguments[0].click();", aba_retroativo)
+                time.sleep(1)
+            except:
+                pass
+            
+            # 2. Preenche os campos usando os IDs exatos que você encontrou no HTML!
+            # Como esses campos têm máscaras (99/99/9999), o send_keys (teclado humano) funciona melhor que a injeção JS
+            
+            campo_data = wait.until(EC.presence_of_element_located((By.ID, "LancamentoRetroativoOT_Data")))
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", campo_data)
+            time.sleep(0.5)
+            campo_data.clear()
+            campo_data.send_keys(str_data)
+            
+            campo_hora_ini = wait.until(EC.presence_of_element_located((By.ID, "LancamentoRetroativoOT_HorarioInicial")))
+            campo_hora_ini.clear()
+            campo_hora_ini.send_keys(str_hora_ini)
+            
+            campo_hora_fim = wait.until(EC.presence_of_element_located((By.ID, "LancamentoRetroativoOT_HorarioFinal")))
+            campo_hora_fim.clear()
+            campo_hora_fim.send_keys(str_hora_fim)
+            
+            campo_motivo = wait.until(EC.presence_of_element_located((By.ID, "LancamentoRetroativoOT_Motivo")))
+            campo_motivo.clear()
+            campo_motivo.send_keys("Problema no sistema")
+            
+            time.sleep(1.5) # Pausa para garantir que as máscaras de texto do site formataram tudo certo
+            
+        # SALVAR ATENDIMENTO
+        btn_salvar = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'salvar atendimento', 'SALVAR ATENDIMENTO'), 'SALVAR ATENDIMENTO')]")))
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn_salvar)
-        time.sleep(0.5)
+        time.sleep(1)
         driver.execute_script("arguments[0].click();", btn_salvar)
         
-        time.sleep(2) 
-        btn_finalizar = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'FINALIZAR')]")))
+        # FINALIZAR
+        time.sleep(3) 
+        btn_finalizar = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'finalizar', 'FINALIZAR'), 'FINALIZAR')]")))
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn_finalizar)
-        time.sleep(0.5)
+        time.sleep(1)
         driver.execute_script("arguments[0].click();", btn_finalizar)
         
+        # VOLTAR PARA O INÍCIO (Recomeçar)
         time.sleep(3)
-        # Tenta voltar usando vários mapeamentos comuns
         try:
-            btn_voltar = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'VOLTAR') or contains(text(), 'Voltar') or @title='Voltar']")))
+            btn_voltar = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'voltar', 'VOLTAR'), 'VOLTAR') or @title='Voltar']")))
             driver.execute_script("arguments[0].click();", btn_voltar)
         except:
-            # Se não achar o botão, volta na "marra" pela URL para garantir que o próximo rode
             driver.get(URL_RAE)
         
     except Exception as e:
         print(f"Erro ao processar o CNPJ {dados['cnpj']}. Motivo: {e}")
         cnpjs_com_erro.append(dados['cnpj'])
-        driver.get(URL_RAE) # Retorna para a tela inicial em caso de erro grave
+        driver.get(URL_RAE) 
         time.sleep(3)
 
 # ==========================================
@@ -321,7 +401,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str):
             
         elif nome_arquivo.startswith("DAS-PGMEI-"):
             servico_nome = "Boleto_DAS"
-            palavra_chave = "das"
+            palavra_chave = "dasn"
             servico_exato = "MEI - Emissão do DAS"
             nome_cliente = "Cliente_DAS"
             match = re.search(r'DAS-PGMEI-(\d+)-', nome_arquivo)
