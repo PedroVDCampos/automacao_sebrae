@@ -1,1 +1,6 @@
 Organizador.bat
+build/
+dist/
+*.spec
+*.exe
+.vscode/

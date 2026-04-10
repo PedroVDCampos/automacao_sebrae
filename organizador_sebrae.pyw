@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import re
 import time
@@ -17,6 +18,16 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.action_chains import ActionChains
 from datetime import datetime, timedelta
+
+def resource_path(relative_path):
+    """ Pega o caminho absoluto do arquivo, funcionando tanto no Python quanto no .exe """
+    try:
+        # O PyInstaller cria uma pasta temporária e guarda o caminho no _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 # ==========================================
 # CONFIGURAÇÕES INICIAIS
@@ -498,8 +509,9 @@ def iniciar():
 # Criação da Janela Principal
 janela = ctk.CTk()
 janela.title("Super Organizador e Robô RAE - Sebrae")
-janela.geometry("600x480")
-janela.grid_columnconfigure(0, weight=1) # Centraliza o conteúdo
+
+# ---> ALTERE A LINHA DO ÍCONE PARA FICAR ASSIM: <---
+janela.iconbitmap(resource_path("icone.ico"))
 
 # Frame principal para dar aquele espaçamento elegante nas bordas
 frame_principal = ctk.CTkFrame(janela, fg_color="transparent")
