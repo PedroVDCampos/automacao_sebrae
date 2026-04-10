@@ -2,9 +2,10 @@ import os
 import shutil
 import re
 import time
-from datetime import datetime, timedelta
 import pdfplumber
 import tkinter as tk
+import customtkinter as ctk
+from tkinter import filedialog, messagebox
 from tkinter import filedialog, messagebox
 from selenium.webdriver.support.ui import Select
 from selenium import webdriver
@@ -15,6 +16,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.action_chains import ActionChains
+from datetime import datetime, timedelta
 
 # ==========================================
 # CONFIGURAÇÕES INICIAIS
@@ -455,18 +457,25 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str):
         messagebox.showinfo("Sucesso!", f"Processo concluído!\n\n{arquivos_movidos} arquivo(s) organizado(s) e registrado(s).")
 
 # ==========================================
-# 4. INTERFACE GRÁFICA
+# 4. INTERFACE GRÁFICA (CUSTOM TKINTER)
 # ==========================================
+
+# Configuração de Estilo (Aqui você escolhe entre a Opção 1 ou Opção 2 da sua imagem)
+# Mude para "Light" se quiser o Estilo Corporativo Limpo (Opção 1)
+# Mude para "Dark" se quiser o Estilo Tech/Dashboard (Opção 2)
+ctk.set_appearance_mode("Dark") 
+ctk.set_default_color_theme("blue") 
+
 def selecionar_origem():
     pasta = filedialog.askdirectory()
     if pasta:
-        entrada_origem.delete(0, tk.END)
+        entrada_origem.delete(0, ctk.END)
         entrada_origem.insert(0, pasta)
 
 def selecionar_destino():
     pasta = filedialog.askdirectory()
     if pasta:
-        entrada_destino.delete(0, tk.END)
+        entrada_destino.delete(0, ctk.END)
         entrada_destino.insert(0, pasta)
 
 def iniciar():
@@ -478,42 +487,67 @@ def iniciar():
         messagebox.showwarning("Atenção", "Preencha todas as pastas e a data de corte!")
         return
 
-    btn_iniciar.config(text="Robô Trabalhando...", state=tk.DISABLED)
+    # Usamos .configure no ctk em vez de .config
+    btn_iniciar.configure(text="Robô Trabalhando...", state="disabled")
     janela.update() 
     
     processar_tudo(origem, destino, data_corte)
     
-    btn_iniciar.config(text="🚀 Iniciar Automação", state=tk.NORMAL)
+    btn_iniciar.configure(text="Iniciar Automação", state="normal")
 
-janela = tk.Tk()
+# Criação da Janela Principal
+janela = ctk.CTk()
 janela.title("Super Organizador e Robô RAE - Sebrae")
-janela.geometry("550x380")
-janela.configure(padx=20, pady=20)
+janela.geometry("600x480")
+janela.grid_columnconfigure(0, weight=1) # Centraliza o conteúdo
 
-tk.Label(janela, text="Robô de Atendimentos", font=("Arial", 14, "bold")).pack(pady=(0, 20))
+# Frame principal para dar aquele espaçamento elegante nas bordas
+frame_principal = ctk.CTkFrame(janela, fg_color="transparent")
+frame_principal.grid(row=0, column=0, padx=30, pady=30, sticky="nsew")
+frame_principal.grid_columnconfigure(0, weight=1)
 
-frame_origem = tk.Frame(janela)
-frame_origem.pack(fill="x", pady=5)
-tk.Label(frame_origem, text="Origem (Downloads):").pack(anchor="w")
-entrada_origem = tk.Entry(frame_origem, width=50)
-entrada_origem.pack(side="left", padx=(0, 10))
-tk.Button(frame_origem, text="Procurar", command=selecionar_origem).pack(side="left")
+# Título
+titulo = ctk.CTkLabel(frame_principal, text="Robô de Atendimentos", font=ctk.CTkFont(size=24, weight="bold"))
+titulo.grid(row=0, column=0, pady=(0, 30))
 
-frame_destino = tk.Frame(janela)
-frame_destino.pack(fill="x", pady=15)
-tk.Label(frame_destino, text="Destino (Sebrae_Organizados):").pack(anchor="w")
-entrada_destino = tk.Entry(frame_destino, width=50)
-entrada_destino.pack(side="left", padx=(0, 10))
-tk.Button(frame_destino, text="Procurar", command=selecionar_destino).pack(side="left")
+# --- Grupo: Origem ---
+lbl_origem = ctk.CTkLabel(frame_principal, text="Origem (Downloads):", font=ctk.CTkFont(size=14))
+lbl_origem.grid(row=1, column=0, sticky="w", pady=(0, 5))
 
-frame_data = tk.Frame(janela)
-frame_data.pack(fill="x", pady=5)
-tk.Label(frame_data, text="Processar apenas arquivos a partir de (DD/MM/AAAA):").pack(anchor="w")
-entrada_data = tk.Entry(frame_data, width=20)
+frame_origem = ctk.CTkFrame(frame_principal, fg_color="transparent")
+frame_origem.grid(row=2, column=0, sticky="ew", pady=(0, 15))
+frame_origem.grid_columnconfigure(0, weight=1)
+
+entrada_origem = ctk.CTkEntry(frame_origem, height=35, placeholder_text="Caminho da pasta de downloads...")
+entrada_origem.grid(row=0, column=0, sticky="ew", padx=(0, 10))
+
+btn_origem = ctk.CTkButton(frame_origem, text="Procurar", width=100, height=35, fg_color="gray50", hover_color="gray40", command=selecionar_origem)
+btn_origem.grid(row=0, column=1)
+
+# --- Grupo: Destino ---
+lbl_destino = ctk.CTkLabel(frame_principal, text="Destino (Sebrae_Organizados):", font=ctk.CTkFont(size=14))
+lbl_destino.grid(row=3, column=0, sticky="w", pady=(0, 5))
+
+frame_destino = ctk.CTkFrame(frame_principal, fg_color="transparent")
+frame_destino.grid(row=4, column=0, sticky="ew", pady=(0, 20))
+frame_destino.grid_columnconfigure(0, weight=1)
+
+entrada_destino = ctk.CTkEntry(frame_destino, height=35, placeholder_text="Caminho da pasta destino...")
+entrada_destino.grid(row=0, column=0, sticky="ew", padx=(0, 10))
+
+btn_destino = ctk.CTkButton(frame_destino, text="Procurar", width=100, height=35, fg_color="gray50", hover_color="gray40", command=selecionar_destino)
+btn_destino.grid(row=0, column=1)
+
+# --- Grupo: Data ---
+lbl_data = ctk.CTkLabel(frame_principal, text="Processar apenas arquivos a partir de (DD/MM/AAAA):", font=ctk.CTkFont(size=14))
+lbl_data.grid(row=5, column=0, sticky="w", pady=(0, 5))
+
+entrada_data = ctk.CTkEntry(frame_principal, width=150, height=35)
 entrada_data.insert(0, "01/04/2026")
-entrada_data.pack(anchor="w")
+entrada_data.grid(row=6, column=0, sticky="w", pady=(0, 30))
 
-btn_iniciar = tk.Button(janela, text="🚀 Iniciar Automação", font=("Arial", 12, "bold"), bg="#005b9f", fg="white", command=iniciar, pady=10)
-btn_iniciar.pack(fill="x", pady=(20, 0))
+# --- Botão Iniciar ---
+btn_iniciar = ctk.CTkButton(frame_principal, text="Iniciar Automação", font=ctk.CTkFont(size=16, weight="bold"), height=50, command=iniciar)
+btn_iniciar.grid(row=7, column=0, sticky="ew")
 
 janela.mainloop()
