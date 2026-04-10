@@ -346,11 +346,16 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str):
     except ValueError:
         messagebox.showerror("Erro", "Formato de data inválido. Use DD/MM/AAAA.")
         return
-
-    servico = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=servico)
-    driver.maximize_window()
-    driver.get(URL_RAE)
+    try:
+        # Inicia o Navegador
+        servico = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=servico)
+        driver.maximize_window()
+        driver.get(URL_RAE)
+    except Exception as e:
+        # Se o Chrome não abrir, ele avisa na tela e cancela a operação sem travar tudo!
+        messagebox.showerror("Erro Fatal no Navegador", f"O robô não conseguiu abrir o Google Chrome.\n\nMotivo Técnico:\n{e}")
+        return
     
     messagebox.showinfo("Ação Necessária", "1. O navegador foi aberto.\n2. Faça o login no RAE.\n3. Quando estiver na tela de 'Pesquisa Clientes', clique em OK nesta janela para o robô começar.")
     
