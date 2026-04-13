@@ -4,3 +4,4 @@ dist/
 *.spec
 *.exe
 .vscode/
+__pycache__/
