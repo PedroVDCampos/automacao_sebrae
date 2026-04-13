@@ -34,16 +34,16 @@ jobs:
       #    --name        → nome do arquivo .exe gerado
       - name: Compilar com PyInstaller
         run: |
-          pyinstaller --onefile --noconsole --icon=icone.ico --name="RoboSebrae" seu_programa.pyw
+          pyinstaller --onefile --noconsole --icon=icone.ico --name="TurboRAE" organizador_sebrae.pyw
 
       # 5. Publica o .exe como anexo da Release no GitHub
       - name: Publicar Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/RoboSebrae.exe
+          files: dist/TurboRAE.exe
           name: "Versão ${{ github.ref_name }}"
           body: |
             ## 🚀 Nova versão: ${{ github.ref_name }}
 
-            Baixe o arquivo `RaeTurbo.exe` abaixo para atualizar manualmente,
+            Baixe o arquivo `TurboRAE.exe` abaixo para atualizar manualmente,
             ou o programa fará isso automaticamente na próxima abertura.
