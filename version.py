@@ -1,0 +1,1 @@
+VERSAO_ATUAL = "1.0.0"

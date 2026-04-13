@@ -1,0 +1,5 @@
+pdfplumber
+customtkinter
+selenium
+webdriver-manager
+requests
