@@ -365,18 +365,14 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str):
         arquivos_movidos = 0
         cnpjs_com_erro.clear()
 
+        # 🛑 LOOP UNIFICADO 🛑
         for nome_arquivo in os.listdir(pasta_origem):
-            # 🛑 O SENSOR DE CANCELAMENTO 🛑
+            
+            # SENSOR DE CANCELAMENTO
             if cancelar_automacao:
                 print("Sinal de cancelamento recebido. Parando o robô...")
-                break # Quebra o loop e vai direto para o fechamento do driver
+                break # Agora sim quebra o loop principal!
                 
-            if not nome_arquivo.lower().endswith('.pdf'):
-                continue
-                
-            caminho_completo = os.path.join(pasta_origem, nome_arquivo)
-        
-        for nome_arquivo in os.listdir(pasta_origem):
             if not nome_arquivo.lower().endswith('.pdf'):
                 continue
                 
