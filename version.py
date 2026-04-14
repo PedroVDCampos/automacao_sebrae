@@ -1,1 +1,1 @@
-VERSAO_ATUAL = "1.0.5"
+VERSAO_ATUAL = "1.0.6"

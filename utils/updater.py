@@ -10,7 +10,7 @@ logger = configurar_logger()
 # IMPORTANTE: Este nome deve ser idêntico ao --name do PyInstaller
 GITHUB_REPO = "PedroVDCampos/automacao_sebrae" 
 VERSAO_ATUAL = "v1.0.0" 
-NOME_EXE = "RAE_Turbo.exe" 
+NOME_EXE = "RAE Turbo.exe" 
 
 def verificar_atualizacao():
     try:
@@ -21,21 +21,22 @@ def verificar_atualizacao():
             dados = resposta.json()
             versao_mais_recente = dados.get("tag_name")
             
-            # Se a versão do GitHub for diferente da local
             if versao_mais_recente and versao_mais_recente != VERSAO_ATUAL:
-                # Pegamos o primeiro arquivo (asset) da release
                 baixar_url = dados["assets"][0]["browser_download_url"]
                 
-                escolha = messagebox.askyesno(
-                    "RAE Turbo - Atualização", 
-                    f"Nova versão disponível: {versao_mais_recente}\nDeseja atualizar agora?"
+                resposta_usuario = messagebox.askyesno(
+                    "Atualização Disponível", 
+                    f"Uma nova versão ({versao_mais_recente}) foi encontrada!\nDeseja atualizar agora?"
                 )
                 
-                if escolha:
+                if resposta_usuario:
                     aplicar_atualizacao(baixar_url)
+        else:
+            # AGORA ELE VAI TE AVISAR SE DER 404!
+            logger.warning(f"O GitHub recusou o acesso ou não achou a release. Código: {resposta.status_code}")
                     
     except Exception as e:
-        logger.error(f"Erro crítico na verificação de update: {e}")
+        logger.error(f"Erro ao verificar atualizações: {e}")
 
 def aplicar_atualizacao(url_download):
     try:
@@ -47,18 +48,14 @@ def aplicar_atualizacao(url_download):
             for chunk in resposta.iter_content(chunk_size=8192):
                 f.write(chunk)
         
-        # O script BAT é o nosso "agente externo" que trabalha enquanto o Python fecha
         script_bat = "atualizar_rae.bat"
         
-        # Lógica do BAT:
-        # 1. Espera 3 segundos (tempo para o Python dar sys.exit)
-        # 2. Tenta apagar o velho (del /f /q força a exclusão)
-        # 3. Renomeia o novo para o nome oficial
-        # 4. Abre o novo
-        # 5. Se apaga sozinho (%~f0)
         conteudo_bat = f"""@echo off
-timeout /t 3 /nobreak > NUL
-if exist "{NOME_EXE}" del /f /q "{NOME_EXE}"
+:tentar_deletar
+timeout /t 1 /nobreak > NUL
+del /f /q "{NOME_EXE}"
+if exist "{NOME_EXE}" goto tentar_deletar
+
 ren "{novo_exe_tmp}" "{NOME_EXE}"
 start "" "{NOME_EXE}"
 del "%~f0"
