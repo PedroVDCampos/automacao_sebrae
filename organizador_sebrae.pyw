@@ -579,7 +579,7 @@ frame_botoes.grid_columnconfigure((0, 1), weight=1)
 btn_iniciar = ctk.CTkButton(frame_botoes, text="Iniciar Automação", font=ctk.CTkFont(size=16, weight="bold"), height=50, command=iniciar)
 btn_iniciar.grid(row=0, column=0, sticky="ew", padx=(0, 5))
 
-btn_cancelar = ctk.CTkButton(frame_botoes, text="Cancelar Automação", font=ctk.CTkFont(size=16, weight="bold"), height=50, fg_color="#C0392B", hover_color="#922B21", state="disabled", command=cancelar)
+btn_cancelar = ctk.CTkButton(frame_botoes, text="Cancelar", font=ctk.CTkFont(size=16, weight="bold"), height=50, fg_color="#FFEE00", hover_color="#922B21", state="disabled", command=cancelar)
 btn_cancelar.grid(row=0, column=1, sticky="ew", padx=(5, 0))
 
 verificar_atualizacao()
