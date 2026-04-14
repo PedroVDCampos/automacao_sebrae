@@ -4,6 +4,8 @@ import time
 import requests
 import subprocess
 from tkinter import messagebox
+from utils.logger import configurar_logger
+logger = configurar_logger()
 
 # IMPORTANTE: Este nome deve ser idêntico ao --name do PyInstaller
 GITHUB_REPO = "PedroVDCampos/automacao_sebrae" 
@@ -33,7 +35,7 @@ def verificar_atualizacao():
                     aplicar_atualizacao(baixar_url)
                     
     except Exception as e:
-        print(f"Erro na verificação: {e}")
+        logger.error(f"Erro crítico na verificação de update: {e}")
 
 def aplicar_atualizacao(url_download):
     try:
