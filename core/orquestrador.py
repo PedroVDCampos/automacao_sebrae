@@ -1,6 +1,7 @@
 import os
 import shutil
 import re
+import subprocess
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -18,11 +19,20 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
         return {"status": "erro", "msg": "Formato de data inválido. Use DD/MM/AAAA."}
         
     try:
-        servico = Service(ChromeDriverManager().install())
+        # 1. Baixa/encontra o motorista do Chrome
+        caminho_driver = ChromeDriverManager().install()
+        
+        # 2. Configura o serviço avisando para NÃO procurar o console do Windows!
+        servico = Service(caminho_driver)
+        servico.creation_flags = subprocess.CREATE_NO_WINDOW
+        
+        # 3. Inicia o navegador
         driver = webdriver.Chrome(service=servico)
         driver.maximize_window()
         driver.get(URL_RAE)
+        
     except Exception as e:
+        logger.error(f"Erro ao iniciar Selenium: {e}")
         return {"status": "erro_fatal", "msg": f"O robô não conseguiu abrir o Google Chrome.\n\nMotivo Técnico:\n{e}"}
     
     # Pausa intencional para login
