@@ -1,8 +1,9 @@
 import os
 import shutil
 import re
+import time
 import subprocess
-from datetime import datetime
+from datetime import datetime, time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -35,10 +36,14 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
         logger.error(f"Erro ao iniciar Selenium: {e}")
         return {"status": "erro_fatal", "msg": f"O robô não conseguiu abrir o Google Chrome.\n\nMotivo Técnico:\n{e}"}
     
-    # Pausa intencional para login
+# Pausa intencional para login
     while not evento_cancelar.is_set():
-        if "Pesquisa Clientes" in driver.title or "Sebrae" in driver.title: 
-            break # Assume que fez login (você pode melhorar essa validação)
+        try:
+            if "Pesquisa Clientes" in driver.title or "Sebrae" in driver.title: 
+                break 
+        except:
+            pass # Ignora erro caso a página ainda esteja carregando
+        time.sleep(1) 
             
     arquivos_movidos = 0
     cnpjs_com_erro = []

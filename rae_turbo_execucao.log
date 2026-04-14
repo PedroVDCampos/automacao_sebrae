@@ -1,0 +1,19 @@
+2026-04-14 13:39:37,640 - [INFO] - ====== WebDriver manager ======
+2026-04-14 13:39:39,338 - [INFO] - Get LATEST chromedriver version for google-chrome
+2026-04-14 13:39:39,771 - [INFO] - Get LATEST chromedriver version for google-chrome
+2026-04-14 13:39:40,365 - [INFO] - There is no [win64] chromedriver "147.0.7727.56" for browser google-chrome "147.0.7727" in cache
+2026-04-14 13:39:40,365 - [INFO] - Get LATEST chromedriver version for google-chrome
+2026-04-14 13:39:41,412 - [INFO] - WebDriver version 147.0.7727.56 selected
+2026-04-14 13:39:41,417 - [INFO] - Modern chrome version https://storage.googleapis.com/chrome-for-testing-public/147.0.7727.56/win32/chromedriver-win32.zip
+2026-04-14 13:39:41,417 - [INFO] - About to download new driver from https://storage.googleapis.com/chrome-for-testing-public/147.0.7727.56/win32/chromedriver-win32.zip
+2026-04-14 13:39:41,778 - [INFO] - Driver downloading response is 200
+2026-04-14 13:39:44,771 - [INFO] - Get LATEST chromedriver version for google-chrome
+2026-04-14 13:39:45,191 - [INFO] - Driver has been saved in cache [C:\Users\SebraeAqui - ER\.wdm\drivers\chromedriver\win64\147.0.7727.56]
+2026-04-14 13:39:48,755 - [INFO] - --- INÍCIO DE NOVA EXECUÇÃO ---
+2026-04-14 13:39:48,935 - [INFO] - Operação cancelada pelo usuário.
+2026-04-14 13:41:28,577 - [INFO] - ====== WebDriver manager ======
+2026-04-14 13:41:30,230 - [INFO] - Get LATEST chromedriver version for google-chrome
+2026-04-14 13:41:30,696 - [INFO] - Get LATEST chromedriver version for google-chrome
+2026-04-14 13:41:31,232 - [INFO] - Driver [C:\Users\SebraeAqui - ER\.wdm\drivers\chromedriver\win64\147.0.7727.56\chromedriver-win32/chromedriver.exe] found in cache
+2026-04-14 13:41:34,340 - [INFO] - --- INÍCIO DE NOVA EXECUÇÃO ---
+2026-04-14 13:41:34,366 - [INFO] - Operação cancelada pelo usuário.

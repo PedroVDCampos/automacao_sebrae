@@ -105,23 +105,28 @@ class App(ctk.CTk):
             messagebox.showwarning("Atenção", "Preencha todas as pastas e a data de corte!")
             return
 
+        # 1. MOVIDO PARA A THREAD PRINCIPAL: A mensagem aparece ANTES da Thread secundária nascer!
+        messagebox.showinfo("Ação Necessária", "1. O navegador será aberto.\n2. Faça o login no RAE.\n3. O robô vai aguardar você chegar na tela de 'Pesquisa Clientes' para começar a trabalhar.")
+
         self.evento_cancelar.clear()
         self.btn_iniciar.configure(text="Robô Trabalhando...", state="disabled")
         self.btn_cancelar.configure(text="Cancelar Automação", state="normal", fg_color="#C0392B")
         
-        # Inicia a Thread
-        threading.Thread(target=self.rodar_background, args=(origem, destino, data_corte)).start()
+        # 2. Inicia a Thread livre de caixas de texto
+        threading.Thread(target=self.rodar_background, args=(origem, destino, data_corte), daemon=True).start()
 
     def rodar_background(self, origem, destino, data_corte):
-        messagebox.showinfo("Ação Necessária", "1. Faça o login no RAE.\n2. Aguarde na tela de 'Pesquisa Clientes'.\n\nClique em OK e aguarde o robô.")
-        
+        # A Thread trabalha 100% invisível aqui
         resultado = processar_tudo(origem, destino, data_corte, self.evento_cancelar)
         
-        # Reseta botões
+        # 3. Manda o resultado de volta para a Thread Principal processar os pop-ups finais
+        self.after(0, self.finalizar_interface, resultado)
+
+    def finalizar_interface(self, resultado):
+        # Todos os messageboxes finais agora estão seguros na Thread Principal
         self.btn_iniciar.configure(text="Iniciar Automação", state="normal")
         self.btn_cancelar.configure(text="Cancelar", state="disabled", fg_color="gray50")
 
-        # Feedback para o usuário baseado no retorno
         if resultado["status"] == "erro":
             messagebox.showerror("Erro", resultado["msg"])
         elif resultado["status"] == "erro_fatal":
@@ -135,7 +140,6 @@ class App(ctk.CTk):
                 messagebox.showwarning("Atenção: Cadastros Pendentes", f"Os seguintes CNPJs tiveram erro:\n\n{lista_erros}")
             else:
                 messagebox.showinfo("Sucesso!", f"Processo concluído!\n\n{resultado['arquivos']} arquivo(s) organizado(s) e registrado(s).")
-
     def cancelar(self):
         self.evento_cancelar.set()
         self.btn_cancelar.configure(text="Cancelando...", state="disabled", fg_color="gray50")
