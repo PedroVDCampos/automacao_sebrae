@@ -1,49 +1,44 @@
 name: Build e Publicar EXE
 
-# Dispara SOMENTE quando você criar uma tag de versão (ex: v1.0.1)
 on:
   push:
     tags:
-      - "v*"
+      - "v*" # Dispara ao criar tags como v1.0.1
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      # 1. Baixa o código do repositório
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
-      # 2. Configura o Python
       - name: Configurar Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # 3. Instala as dependências do projeto + PyInstaller
       - name: Instalar dependências
         run: |
           pip install pyinstaller
           pip install -r requirements.txt
 
-      # 4. Compila o .exe com PyInstaller
-      #    --onefile     → tudo em um único arquivo
-      #    --noconsole   → sem janela de terminal (equivalente ao .pyw)
-      #    --icon        → ícone do programa
-      #    --name        → nome do arquivo .exe gerado
       - name: Compilar com PyInstaller
+        # Ajustes: 
+        # 1. Usamos main.pyw como entrada
+        # 2. Caminho do ícone corrigido para assets/icone.ico
+        # 3. Adicionamos a pasta assets ao bundle (--add-data)
+        # 4. Nome padronizado para RAE_Turbo
         run: |
-          pyinstaller --onefile --noconsole --icon=icone.ico --name="TurboRAE" organizador_sebrae.pyw
+          pyinstaller --onefile --noconsole --icon="assets/icone.ico" --add-data "assets;assets" --name="RAE_Turbo" main.pyw
 
-      # 5. Publica o .exe como anexo da Release no GitHub
       - name: Publicar Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/TurboRAE.exe
-          name: "Versão ${{ github.ref_name }}"
+          files: dist/RAE_Turbo.exe
+          name: "RAE Turbo - ${{ github.ref_name }}"
           body: |
             ## 🚀 Nova versão: ${{ github.ref_name }}
-
-            Baixe o arquivo `TurboRAE.exe` abaixo para atualizar manualmente,
-            ou o programa fará isso automaticamente na próxima abertura.
+            
+            O programa atualizará automaticamente na próxima abertura.
+            Se necessário, baixe o `RAE_Turbo.exe` manualmente abaixo.

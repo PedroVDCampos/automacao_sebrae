@@ -1,5 +1,5 @@
-pdfplumber
-customtkinter
-selenium
-webdriver-manager
-requests
+customtkinter==5.2.2
+pdfplumber==0.10.3
+selenium==4.18.1
+webdriver-manager==4.0.1
+requests==2.31.0
