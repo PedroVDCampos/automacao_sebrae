@@ -48,6 +48,7 @@ def aplicar_atualizacao(url_download):
             for chunk in resposta.iter_content(chunk_size=8192):
                 f.write(chunk)
         
+        # 2. Cria o script .bat definitivo (Com limpeza de memória PyInstaller)
         script_bat = "atualizar_rae.bat"
         
         conteudo_bat = f"""@echo off
@@ -57,6 +58,11 @@ del /f /q "{NOME_EXE}"
 if exist "{NOME_EXE}" goto tentar_deletar
 
 ren "{novo_exe_tmp}" "{NOME_EXE}"
+
+:: O SEGREDO SÊNIOR: Limpar a herança do PyInstaller antes de iniciar o novo
+set _MEIPASS2=
+set _MEIPASS=
+
 start "" "{NOME_EXE}"
 del "%~f0"
 """
