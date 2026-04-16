@@ -5,3 +5,4 @@ dist/
 *.exe
 .vscode/
 __pycache__/
+*.log

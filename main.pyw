@@ -105,25 +105,37 @@ class App(ctk.CTk):
             messagebox.showwarning("Atenção", "Preencha todas as pastas e a data de corte!")
             return
 
-        # 1. MOVIDO PARA A THREAD PRINCIPAL: A mensagem aparece ANTES da Thread secundária nascer!
-        messagebox.showinfo("Ação Necessária", "1. O navegador será aberto.\n2. Faça o login no RAE.\n3. O robô vai aguardar você chegar na tela de 'Pesquisa Clientes' para começar a trabalhar.")
-
         self.evento_cancelar.clear()
-        self.btn_iniciar.configure(text="Robô Trabalhando...", state="disabled")
+        
+        # Cria um "sinal de trânsito" para pausar o robô
+        self.evento_login = threading.Event()
+        self.evento_login.clear()
+
+        self.btn_iniciar.configure(text="Iniciando Navegador...", state="disabled")
         self.btn_cancelar.configure(text="Cancelar Automação", state="normal", fg_color="#C0392B")
         
-        # 2. Inicia a Thread livre de caixas de texto
+        # Inicia a Thread
         threading.Thread(target=self.rodar_background, args=(origem, destino, data_corte), daemon=True).start()
 
+    def mostrar_aviso_login(self):
+        messagebox.showinfo("Ação Necessária", "1. O navegador foi aberto.\n2. Faça o login no RAE.\n3. Quando estiver na tela de 'Pesquisa Clientes', clique em OK nesta janela para o robô começar.")
+        self.evento_login.set() # Sinal Verde! Libera o robô para trabalhar.
+        self.btn_iniciar.configure(text="Robô Trabalhando...")
+
+    def callback_pausa_login(self):
+        # Pede para a interface exibir a caixa de mensagem com segurança
+        self.after(0, self.mostrar_aviso_login)
+        # O robô senta e espera (0% de CPU) até você clicar em OK!
+        self.evento_login.wait() 
+
     def rodar_background(self, origem, destino, data_corte):
-        # A Thread trabalha 100% invisível aqui
-        resultado = processar_tudo(origem, destino, data_corte, self.evento_cancelar)
+        # Passamos a função callback para o orquestrador usar
+        resultado = processar_tudo(origem, destino, data_corte, self.evento_cancelar, self.callback_pausa_login)
         
-        # 3. Manda o resultado de volta para a Thread Principal processar os pop-ups finais
+        # Devolve o resultado para a tela final
         self.after(0, self.finalizar_interface, resultado)
 
     def finalizar_interface(self, resultado):
-        # Todos os messageboxes finais agora estão seguros na Thread Principal
         self.btn_iniciar.configure(text="Iniciar Automação", state="normal")
         self.btn_cancelar.configure(text="Cancelar", state="disabled", fg_color="gray50")
 

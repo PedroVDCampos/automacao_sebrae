@@ -13,38 +13,31 @@ from core.automacao_web import registrar_no_rae, URL_RAE
 
 logger = configurar_logger()
 
-def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_cancelar):
+def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_cancelar, callback_login):
     try:
         data_corte = datetime.strptime(data_corte_str, "%d/%m/%Y")
     except ValueError:
         return {"status": "erro", "msg": "Formato de data inválido. Use DD/MM/AAAA."}
         
     try:
-        # 1. Baixa/encontra o motorista do Chrome
-        caminho_driver = ChromeDriverManager().install()
-        
-        # 2. Configura o serviço avisando para NÃO procurar o console do Windows!
-        servico = Service(caminho_driver)
+        # Inicialização do Chrome
+        servico = Service(ChromeDriverManager().install())
         servico.creation_flags = subprocess.CREATE_NO_WINDOW
         
-        # 3. Inicia o navegador
         driver = webdriver.Chrome(service=servico)
         driver.maximize_window()
         driver.get(URL_RAE)
-        
     except Exception as e:
-        logger.error(f"Erro ao iniciar Selenium: {e}")
         return {"status": "erro_fatal", "msg": f"O robô não conseguiu abrir o Google Chrome.\n\nMotivo Técnico:\n{e}"}
     
-# Pausa intencional para login
-    while not evento_cancelar.is_set():
-        try:
-            if "Pesquisa Clientes" in driver.title or "Sebrae" in driver.title: 
-                break 
-        except:
-            pass # Ignora erro caso a página ainda esteja carregando
-        time.sleep(1) 
-            
+    # 🛑 PAUSA INTELIGENTE: Avisa a interface e dorme até você clicar em OK
+    callback_login()
+    
+    # Quando o código passa daqui, você já clicou em OK!
+    if evento_cancelar.is_set():
+        driver.quit()
+        return {"status": "cancelado"}
+        
     arquivos_movidos = 0
     cnpjs_com_erro = []
     logger.info("--- INÍCIO DE NOVA EXECUÇÃO ---")
