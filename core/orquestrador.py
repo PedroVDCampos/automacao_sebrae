@@ -15,9 +15,27 @@ logger = configurar_logger()
 
 def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_cancelar, callback_login):
     try:
-        data_corte = datetime.strptime(data_corte_str, "%d/%m/%Y")
-    except ValueError:
-        return {"status": "erro", "msg": "Formato de data inválido. Use DD/MM/AAAA."}
+        servico = Service(ChromeDriverManager().install())
+        servico.creation_flags = subprocess.CREATE_NO_WINDOW
+        
+        driver = webdriver.Chrome(service=servico)
+        driver.maximize_window()
+        driver.get(URL_RAE)
+    except Exception as e:
+        erro_str = str(e)
+        # 🛑 ARMADILHA PARA O ERRO 193 (CACHE CORROMPIDO)
+        if "193" in erro_str or "Win32" in erro_str:
+            logger.warning("Cache do ChromeDriver corrompido detectado. Limpando automaticamente...")
+            try:
+                pasta_wdm = os.path.join(os.path.expanduser("~"), ".wdm")
+                if os.path.exists(pasta_wdm):
+                    shutil.rmtree(pasta_wdm) # O robô apaga o arquivo quebrado sozinho!
+                return {"status": "erro", "msg": "Houve uma falha na rede do Sebrae ao baixar o motor do Chrome.\nO robô já limpou os arquivos corrompidos.\n\nPor favor, clique em 'Iniciar Automação' novamente."}
+            except Exception as ex_limpeza:
+                logger.error(f"Falha ao tentar limpar o cache: {ex_limpeza}")
+                
+        # Se for outro erro, mostra a mensagem fatal normal
+        return {"status": "erro_fatal", "msg": f"O robô não conseguiu abrir o Google Chrome.\n\nMotivo Técnico:\n{e}"}
         
     try:
         # Inicialização do Chrome
