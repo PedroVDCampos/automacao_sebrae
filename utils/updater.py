@@ -9,7 +9,7 @@ logger = configurar_logger()
 
 # IMPORTANTE: Este nome deve ser idêntico ao --name do PyInstaller
 GITHUB_REPO = "PedroVDCampos/automacao_sebrae" 
-VERSAO_ATUAL = "v1.1.1"
+VERSAO_ATUAL = "v1.1.2"
 NOME_EXE = "RAE Turbo.exe" 
 
 def verificar_atualizacao():
@@ -40,36 +40,39 @@ def verificar_atualizacao():
 
 def aplicar_atualizacao(url_download):
     try:
-        novo_exe_tmp = "RAE_Turbo_Novo.exe"
+        # Pega o nome exato do arquivo que o usuário clicou (ex: "RAE_Turbo (1).exe")
+        nome_executavel_atual = os.path.basename(sys.executable)
         
-        # Download com stream para não travar a memória
+        # O arquivo novo temporário
+        novo_exe_tmp = "update_temporario_download.exe"
+        
+        # Faz o download
         resposta = requests.get(url_download, stream=True)
         with open(novo_exe_tmp, 'wb') as f:
             for chunk in resposta.iter_content(chunk_size=8192):
                 f.write(chunk)
         
-        # 2. Cria o script .bat definitivo (Com limpeza de memória PyInstaller)
         script_bat = "atualizar_rae.bat"
         
+        # O script agora usa a variável 'nome_executavel_atual' dinamicamente
+        # e renomeia o arquivo novo para ter O MESMO NOME que o usuário já usava.
         conteudo_bat = f"""@echo off
 :tentar_deletar
 timeout /t 1 /nobreak > NUL
-del /f /q "{NOME_EXE}"
-if exist "{NOME_EXE}" goto tentar_deletar
+del /f /q "{nome_executavel_atual}"
+if exist "{nome_executavel_atual}" goto tentar_deletar
 
-ren "{novo_exe_tmp}" "{NOME_EXE}"
+ren "{novo_exe_tmp}" "{nome_executavel_atual}"
 
-:: O SEGREDO SÊNIOR: Limpar a herança do PyInstaller antes de iniciar o novo
 set _MEIPASS2=
 set _MEIPASS=
 
-start "" "{NOME_EXE}"
+start "" "{nome_executavel_atual}"
 del "%~f0"
 """
         with open(script_bat, "w") as f:
             f.write(conteudo_bat)
             
-        # Lança o BAT sem abrir janela de comando e fecha o programa
         subprocess.Popen(script_bat, shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
         sys.exit()
         

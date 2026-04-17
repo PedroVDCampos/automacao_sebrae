@@ -3,7 +3,7 @@ import sys
 import threading
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
-from core.orquestrador import processar_tudo
+from core.orquestrador import processar_tudo, verificar_compatibilidade_chrome  # ✅ NOVO
 from utils.updater import verificar_atualizacao
 
 # Configuração da UI
@@ -105,6 +105,24 @@ class App(ctk.CTk):
             messagebox.showwarning("Atenção", "Preencha todas as pastas e a data de corte!")
             return
 
+        # ✅ NOVO: Verifica compatibilidade Chrome vs ChromeDriver antes de qualquer coisa
+        compatibilidade = verificar_compatibilidade_chrome()
+
+        if compatibilidade["status"] == "erro":
+            # ChromeDriver ausente ou corrompido — bloqueia totalmente
+            messagebox.showerror("Problema no ChromeDriver", compatibilidade["msg"])
+            return
+
+        if compatibilidade["status"] == "aviso":
+            # Versões diferentes — avisa mas deixa o usuário decidir
+            continuar = messagebox.askyesno(
+                "⚠️ Aviso de Compatibilidade",
+                compatibilidade["msg"] + "\n\nDeseja tentar assim mesmo?"
+            )
+            if not continuar:
+                return
+
+        # Tudo certo (ou usuário aceitou o risco) — inicia normalmente
         self.evento_cancelar.clear()
         
         # Cria um "sinal de trânsito" para pausar o robô
@@ -152,6 +170,7 @@ class App(ctk.CTk):
                 messagebox.showwarning("Atenção: Cadastros Pendentes", f"Os seguintes CNPJs tiveram erro:\n\n{lista_erros}")
             else:
                 messagebox.showinfo("Sucesso!", f"Processo concluído!\n\n{resultado['arquivos']} arquivo(s) organizado(s) e registrado(s).")
+
     def cancelar(self):
         self.evento_cancelar.set()
         self.btn_cancelar.configure(text="Cancelando...", state="disabled", fg_color="gray50")
