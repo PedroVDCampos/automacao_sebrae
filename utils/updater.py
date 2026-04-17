@@ -9,7 +9,7 @@ logger = configurar_logger()
 
 # IMPORTANTE: Este nome deve ser idêntico ao --name do PyInstaller
 GITHUB_REPO = "PedroVDCampos/automacao_sebrae" 
-VERSAO_ATUAL = "v1.1.2"
+VERSAO_ATUAL = "v1.1.4"
 NOME_EXE = "RAE Turbo.exe" 
 
 def verificar_atualizacao():
