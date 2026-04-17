@@ -29,7 +29,7 @@ jobs:
         # 3. Adicionamos a pasta assets ao bundle (--add-data)
         # 4. Nome padronizado para RAE_Turbo
         run: |
-          pyinstaller --onefile --noconsole --icon=icone.ico `
+          pyinstaller --onefile --noconsole --icon=assets/icone.ico `
           --add-data "drivers/chromedriver.exe;drivers" `
           --name="RAE_Turbo" main.pyw
 
