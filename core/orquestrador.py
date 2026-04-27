@@ -11,17 +11,15 @@ from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from utils.logger import configurar_logger
+from utils.paths import resource_path
+from utils.privacy import mascarar_cnpj, nome_seguro_para_pasta
 from core.extrator_pdf import ler_pdf_padrao, ler_boleto_parcelamento
 from core.automacao_web import registrar_no_rae, URL_RAE
 
 logger = configurar_logger()
 
 def _caminho_chromedriver():
-    if getattr(sys, 'frozen', False):
-        base = sys._MEIPASS
-    else:
-        base = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-    return os.path.normpath(os.path.join(base, 'drivers', 'chromedriver.exe'))
+    return os.path.normpath(resource_path(os.path.join('drivers', 'chromedriver.exe')))
 
 def _versao_chrome_instalado() -> str | None:
     chaves = [
@@ -101,7 +99,14 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
     except Exception as e:
         return {"status": "erro_fatal", "msg": f"O robô não conseguiu abrir o Chrome.\n\nMotivo Técnico:\n{e}"}
 
-    callback_login()
+    login_autorizado = callback_login()
+
+    if not login_autorizado:
+        try:
+            driver.quit()
+        except Exception:
+            pass
+        return {"status": "cancelado"}
 
     if evento_cancelar.is_set():
         driver.quit()
@@ -171,7 +176,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
             ano = str(data_formatada.year)
             mes = data_formatada.strftime('%m')
 
-            nova_pasta = os.path.join(pasta_destino_raiz, ano, mes, servico_nome, nome_cliente)
+            nova_pasta = os.path.join(pasta_destino_raiz, ano, mes, servico_nome, nome_seguro_para_pasta(nome_cliente))
             os.makedirs(nova_pasta, exist_ok=True)
 
             destino_final = os.path.join(nova_pasta, nome_arquivo)
@@ -182,7 +187,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
             # 🛡️ FILTRO DE ONIPRESENÇA: Verifica se já atendeu esse CNPJ hoje para o mesmo serviço
             assinatura_atendimento = f"{cnpj_cliente}_{data_formatada.strftime('%Y-%m-%d')}_{servico_exato}"
             if assinatura_atendimento in memoria_atendimentos:
-                logger.info(f"⏭️ Duplicidade barrada: CNPJ {cnpj_cliente} já recebeu o serviço '{servico_exato}' hoje. Arquivo apenas organizado.")
+                logger.info(f"⏭️ Duplicidade barrada: CNPJ {mascarar_cnpj(cnpj_cliente)} já recebeu o serviço '{servico_exato}' hoje. Arquivo apenas organizado.")
                 continue
 
             dados_atendimento = {
@@ -201,11 +206,11 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                 
             elif sucesso == "nao_encontrado":
                 # CNPJ não existe no sistema do Sebrae. Não precisa reiniciar o navegador.
-                cnpjs_com_erro.append(f"{cnpj_cliente} (Não Encontrado)")
+                cnpjs_com_erro.append(f"{mascarar_cnpj(cnpj_cliente)} (Não Encontrado)")
                 
             else:
                 # 🛑 FALHA CRÔNICA: Se retornou False, o botão prosseguir ou o site travou.
-                logger.warning(f"⚠️ Travamento detectado no CNPJ {cnpj_cliente}. Iniciando Protocolo de Segurança (Restart)...")
+                logger.warning(f"⚠️ Travamento detectado no CNPJ {mascarar_cnpj(cnpj_cliente)}. Iniciando Protocolo de Segurança (Restart)...")
                 
                 # Dispara Alarme Sonoro de Alerta
                 for _ in range(4):
@@ -228,7 +233,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                 # Pausa Nativa com alerta por cima de todas as janelas
                 ctypes.windll.user32.MessageBoxW(
                     0,
-                    f"O robô travou no CNPJ: {cnpj_cliente}\nO navegador foi reiniciado para limpar o cache do Sebrae.\n\n"
+                    f"O robô travou no CNPJ: {mascarar_cnpj(cnpj_cliente)}\nO navegador foi reiniciado para limpar o cache do Sebrae.\n\n"
                     "1. Faça o LOGIN novamente.\n"
                     "2. Vá até a tela de 'Pesquisa Clientes'.\n"
                     "3. Clique em OK para o robô tentar o atendimento mais uma vez.",
@@ -237,15 +242,15 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                 )
                 
                 # Segunda Tentativa!
-                logger.info(f"🔄 Tentativa de resgate do CNPJ {cnpj_cliente}...")
+                logger.info(f"🔄 Tentativa de resgate do CNPJ {mascarar_cnpj(cnpj_cliente)}...")
                 sucesso_retry = registrar_no_rae(driver, dados_atendimento)
                 
                 if sucesso_retry == True:
                     logger.info("✅ Resgate bem-sucedido após reinício!")
                     memoria_atendimentos.add(assinatura_atendimento)
                 else:
-                    logger.error(f"❌ O CNPJ {cnpj_cliente} falhou definitivamente.")
-                    cnpjs_com_erro.append(cnpj_cliente)
+                    logger.error(f"❌ O CNPJ {mascarar_cnpj(cnpj_cliente)} falhou definitivamente.")
+                    cnpjs_com_erro.append(mascarar_cnpj(cnpj_cliente))
 
     try: driver.quit()
     except: pass

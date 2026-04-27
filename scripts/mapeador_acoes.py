@@ -1,3 +1,9 @@
+from pathlib import Path
+
+RAIZ_PROJETO = Path(__file__).resolve().parents[1]
+PASTA_DATA = RAIZ_PROJETO / "data"
+PASTA_DATA.mkdir(exist_ok=True)
+
 import time
 import json
 from selenium import webdriver
@@ -13,7 +19,7 @@ def injetar_id(driver, id_select, valor_id, tempo_espera):
 
 def rodar_mapeador_acoes():
     try:
-        with open("base_dados_projetos.json", "r", encoding="utf-8") as f:
+        with open(PASTA_DATA / "base_dados_projetos.json", "r", encoding="utf-8") as f:
             dados_projetos = json.load(f)
     except Exception:
         print("❌ Arquivo 'base_dados_projetos.json' não encontrado.")
@@ -64,7 +70,7 @@ def rodar_mapeador_acoes():
 
             base_de_acoes_hierarquica[id_proj] = acoes_deste_projeto
 
-            with open("base_dados_acoes.json", "w", encoding="utf-8") as f:
+            with open(PASTA_DATA / "base_dados_acoes.json", "w", encoding="utf-8") as f:
                 json.dump(base_de_acoes_hierarquica, f, ensure_ascii=False, indent=4)
 
         except Exception as e:

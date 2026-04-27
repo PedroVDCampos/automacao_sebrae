@@ -1,20 +1,14 @@
 import logging
-import os
+from utils.paths import log_path
 
 def configurar_logger():
-    # Caminho Sênior: Salva o log na pasta AppData/Local do Windows do usuário
-    pasta_appdata = os.path.join(os.path.expanduser("~"), "AppData", "Local", "RAETurbo")
-    
-    # Cria a pasta invisível se ela não existir
-    os.makedirs(pasta_appdata, exist_ok=True)
-    
-    # Define o arquivo de log lá dentro
-    caminho_log = os.path.join(pasta_appdata, "rae_turbo_execucao.log")
-    
-    if not logging.getLogger().hasHandlers():
+    caminho_log = log_path()
+    root_logger = logging.getLogger()
+    if not root_logger.handlers:
         logging.basicConfig(
-            filename=caminho_log,
+            filename=str(caminho_log),
             level=logging.INFO,
-            format='%(asctime)s - [%(levelname)s] - %(message)s'
+            format="%(asctime)s - [%(levelname)s] - %(message)s",
+            encoding="utf-8",
         )
     return logging.getLogger(__name__)

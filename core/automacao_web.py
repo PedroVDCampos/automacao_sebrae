@@ -10,6 +10,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
 from utils.logger import configurar_logger
+from utils.paths import data_path
+from utils.privacy import mascarar_cnpj
 
 logger = configurar_logger()
 URL_RAE = "https://atendimento.sp.sebrae.com.br/Acesso/Login?ReturnUrl=%2f" 
@@ -19,8 +21,7 @@ URL_RAE = "https://atendimento.sp.sebrae.com.br/Acesso/Login?ReturnUrl=%2f"
 # ============================================================
 def carregar_base_dados(nome_arquivo):
     try:
-        base = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        caminho = os.path.join(base, nome_arquivo)
+        caminho = data_path(nome_arquivo)
         with open(caminho, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
@@ -68,7 +69,7 @@ def registrar_no_rae(driver, dados):
     id_acao = acoes_do_projeto.get(config.get('acao', ''), config.get('acao', ''))
     
     try:
-        logger.info(f"Iniciando registro para o CNPJ: {dados['cnpj']}")
+        logger.info(f"Iniciando registro para o CNPJ: {mascarar_cnpj(dados['cnpj'])}")
         
         # 1. PESQUISA DO CNPJ
         aba_pj = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'Pessoa Jurídica')]")))
@@ -85,7 +86,7 @@ def registrar_no_rae(driver, dados):
         time.sleep(2) 
         
         if "Nenhum registro encontrado" in driver.page_source or "desatualizado" in driver.page_source.lower():
-            logger.warning(f"CNPJ {dados['cnpj']} não encontrado ou desatualizado.")
+            logger.warning(f"CNPJ {mascarar_cnpj(dados['cnpj'])} não encontrado ou desatualizado.")
             return "nao_encontrado" 
 
         # 2. EDIÇÃO (O LÁPIS)
@@ -117,7 +118,7 @@ def registrar_no_rae(driver, dados):
             clicar_js(driver, btn_individual)
             
         except Exception as e:
-            logger.error(f"Erro ao selecionar PF para CNPJ {dados['cnpj']}: {e}")
+            logger.error(f"Erro ao selecionar PF para CNPJ {mascarar_cnpj(dados['cnpj'])}: {e}")
             driver.refresh()
             return False
 
@@ -258,11 +259,11 @@ def registrar_no_rae(driver, dados):
         except:
             driver.get(URL_RAE)
             
-        logger.info(f"CNPJ {dados['cnpj']} registrado com sucesso.")
+        logger.info(f"CNPJ {mascarar_cnpj(dados['cnpj'])} registrado com sucesso.")
         return True
         
     except Exception as e:
-        logger.error(f"Erro ao processar o CNPJ {dados.get('cnpj', 'Desconhecido')}. Motivo: {e}")
+        logger.error(f"Erro ao processar o CNPJ {mascarar_cnpj(dados.get('cnpj', ''))}. Motivo: {e}")
         logger.error(traceback.format_exc()) # Grava a linha exata do erro no log
         driver.get(URL_RAE) 
         time.sleep(3)

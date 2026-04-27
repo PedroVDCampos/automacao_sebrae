@@ -1,3 +1,9 @@
+from pathlib import Path
+
+RAIZ_PROJETO = Path(__file__).resolve().parents[1]
+PASTA_DATA = RAIZ_PROJETO / "data"
+PASTA_DATA.mkdir(exist_ok=True)
+
 import time
 import json
 from selenium import webdriver
@@ -74,7 +80,7 @@ def rodar_mapeador():
             base_de_dados[f"ER_{id_er}"] = projetos_desta_unidade
             
             # SALVAMENTO INCREMENTAL: Salva no HD a cada volta!
-            with open("base_dados_projetos.json", "w", encoding="utf-8") as f:
+            with open(PASTA_DATA / "base_dados_projetos.json", "w", encoding="utf-8") as f:
                 json.dump(base_de_dados, f, ensure_ascii=False, indent=4)
                 
         except Exception as e:
