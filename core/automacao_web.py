@@ -1,4 +1,7 @@
 import time
+import os
+import json
+import sys
 import traceback
 from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
@@ -11,6 +14,39 @@ from utils.logger import configurar_logger
 logger = configurar_logger()
 URL_RAE = "https://atendimento.sp.sebrae.com.br/Acesso/Login?ReturnUrl=%2f" 
 
+# ============================================================
+# 📁 CARREGAMENTO DINÂMICO (NOVO CÉREBRO)
+# ============================================================
+def carregar_base_dados(nome_arquivo):
+    try:
+        base = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        caminho = os.path.join(base, nome_arquivo)
+        with open(caminho, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        logger.warning(f"Aviso: Base {nome_arquivo} não encontrada: {e}")
+        return {}
+
+MAPA_UNIDADES = {
+    "ER ALTO TIETÊ": "2", "ER ARAÇATUBA": "3", "ER ARARAQUARA": "4", "ER BAIXADA SANTISTA": "5",
+    "ER BARRETOS": "6", "ER BAURU": "7", "ER BOTUCATU": "8", "ER CAMPINAS": "9", "ER CAPITAL CENTRO": "10",
+    "ER CAPITAL LESTE": "11", "ER CAPITAL LESTE II": "12", "ER CAPITAL NORTE": "13", "ER CAPITAL OESTE": "14",
+    "ER CAPITAL SUL": "15", "ER FRANCA": "16", "ER GRANDE ABC": "17", "ER GUARATINGUETÁ": "18",
+    "ER GUARULHOS": "19", "ER JUNDIAÍ": "20", "ER MARÍLIA": "21", "ER OSASCO": "22", "ER OURINHOS": "23",
+    "ER PIRACICABA": "24", "ER PRESIDENTE PRUDENTE": "25", "ER RIBEIRÃO PRETO": "26", "ER SÃO CARLOS": "27",
+    "ER SÃO JOÃO DA BOA VISTA": "28", "ER SÃO JOSÉ DO RIO PRETO": "29", "ER SÃO JOSÉ DOS CAMPOS": "30",
+    "ER SOROCABA": "31", "ER SUDOESTE PAULISTA": "32", "ER VALE DO RIBEIRA": "33", "ER VOTUPORANGA": "34",
+    "ACESSO A MERCADOS E SERVIÇOS FINANCEIROS": "36", "ADMINISTRAÇÃO": "37", "ATENDIMENTO AO CLIENTE": "38", 
+    "ATENDIMENTO REMOTO": "39", "AUDITORIA": "41", "CULTURA EMPREENDEDORA": "44", 
+    "DIRETORIA DE ADMINISTRAÇÃO E FINANÇAS": "45", "DIRETORIA TÉCNICA": "46", "ECONOMIA CRIATIVA E STARTUPS": "6226", 
+    "ESCOLA DE NEGÓCIOS SEBRAE-SP": "35", "FINANÇAS E CONTROLADORIA": "47", "GESTÃO DE PESSOAS": "48", 
+    "GESTÃO DE SOLUÇÕES E TRANSFORMAÇÃO DIGITAL": "49", "GESTÃO ESTRATÉGICA": "50", "JURÍDICO E SECRETARIA GERAL": "52", 
+    "MARKETING PUBLICIDADE E PROPAGANDA INSTITUCIONAL": "51", "OUVIDORIA": "53", 
+    "POLÍTICAS PÚBLICAS E RELAÇÕES GOVERNAMENTAIS": "3771", "PROJETOS E OBRAS": "54", 
+    "RELACIONAMENTO COM CLIENTE": "42", "TECNOLOGIA CORPORATIVA": "56", "TELEMARKETING ATIVO": "57", 
+    "TERRITORIAL E SETORIAL": "40", "Aquisições e Credenciamento": "55"
+}
+
 def clicar_js(driver, elemento):
     """Rola a tela até o elemento (para você ver) e força o clique via JS"""
     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", elemento)
@@ -19,6 +55,17 @@ def clicar_js(driver, elemento):
 
 def registrar_no_rae(driver, dados):
     wait = WebDriverWait(driver, 15) 
+    
+    # 🧠 LENDO OS DADOS DINÂMICOS
+    base_projetos = carregar_base_dados("base_dados_projetos.json")
+    base_acoes = carregar_base_dados("base_dados_acoes.json")
+    
+    config = dados.get('config_unidade', {})
+    id_unidade = MAPA_UNIDADES.get(config.get('unidade_nome', ''), '')
+    projetos_da_unidade = base_projetos.get(f"ER_{id_unidade}", {})
+    id_projeto = projetos_da_unidade.get(config.get('projeto', ''), config.get('projeto', ''))
+    acoes_do_projeto = base_acoes.get(id_projeto, {})
+    id_acao = acoes_do_projeto.get(config.get('acao', ''), config.get('acao', ''))
     
     try:
         logger.info(f"Iniciando registro para o CNPJ: {dados['cnpj']}")
@@ -87,7 +134,7 @@ def registrar_no_rae(driver, dados):
         caixas_pesquisa = driver.find_elements(By.CSS_SELECTOR, "input.select2-search__field")
         for caixa in caixas_pesquisa:
             if caixa.is_displayed():
-                caixa.send_keys("Sebrae Aqui") 
+                caixa.send_keys(config.get('canal', 'Sebrae Aqui')) 
                 time.sleep(0.5)
                 caixa.send_keys(Keys.ENTER)
                 break
@@ -103,7 +150,7 @@ def registrar_no_rae(driver, dados):
         caixas_pesquisa = driver.find_elements(By.CSS_SELECTOR, "input.select2-search__field")
         for caixa in caixas_pesquisa:
             if caixa.is_displayed():
-                caixa.send_keys("SEBRAE AQUI - SÃO MIGUEL ARCANJO") 
+                caixa.send_keys(config.get('local_execucao', '')) 
                 time.sleep(0.5)
                 caixa.send_keys(Keys.ENTER)
                 break
@@ -148,13 +195,14 @@ def registrar_no_rae(driver, dados):
         
         time.sleep(2) 
         try:
-            driver.execute_script("$('#UnidadeModal').val('31').trigger('change');")
+            # INJEÇÃO COM OS DADOS DINÂMICOS
+            driver.execute_script(f"$('#UnidadeModal').val('{id_unidade}').trigger('change');")
             time.sleep(0.5)
-            driver.execute_script("$('#AnoModal').val('2026').trigger('change');")
+            driver.execute_script(f"$('#AnoModal').val('{config.get('ano', '2026')}').trigger('change');")
             time.sleep(0.5)
-            driver.execute_script("$('#PlanoModal').val('82').trigger('change');")
+            driver.execute_script(f"$('#PlanoModal').val('{id_projeto}').trigger('change');")
             time.sleep(0.5)
-            driver.execute_script("$('#AcaoModal').val('260395547').trigger('change');")
+            driver.execute_script(f"$('#AcaoModal').val('{id_acao}').trigger('change');")
         except Exception as e:
             logger.error(f"Falha na injeção do plano orçamentário: {e}")
             

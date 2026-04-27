@@ -6,3 +6,5 @@ dist/
 .vscode/
 __pycache__/
 *.log
+config_unidade.json
+*.txt

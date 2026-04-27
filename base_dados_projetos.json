@@ -1,0 +1,501 @@
+{
+    "ER_36": {},
+    "ER_37": {},
+    "ER_2": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Alto Tietê - Resultados": "282",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Alto Tietê": "102",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Alto Tietê": "1195",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_55": {
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_3": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Araçatuba - Resultados": "250",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Araçatuba": "88",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Araçatuba": "1556",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_4": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Araraquara - Resultados": "254",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Araraquara": "92",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Araraquara": "2631",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_38": {
+        "Central de Atendimento": "63",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Expansão Poupa Tempo": "242",
+        "Fature + Agente de Gestão/Jornada Estruturada": "268",
+        "Impulsiona - PF": "165",
+        "Sebrae Aqui": "241",
+        "Sebrae Comunidades: Diversidade": "245",
+        "Sebrae Comunidades: Inclusão Produtiva": "258",
+        "Sebrae Delas - Capacitação Empreendedora": "246",
+        "Sebrae Delas: Inclusão Produtiva": "261",
+        "Sebrae Mais Acessível - Libras": "154",
+        "Sebrae Móvel": "240",
+        "Sebrae Visita": "244",
+        "Semana do MEI": "155",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201",
+        "Suporte a Negócios - U.Atendimento ao Cliente": "5357"
+    },
+    "ER_39": {},
+    "ER_41": {
+        "Custeio Administrativo - ERs e Sede": "35"
+    },
+    "ER_5": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Baixada Santista - Resultados": "255",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Baixada Santista": "97",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Baixada Santista": "202",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_6": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Barretos - Resultados": "259",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Barretos": "94",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Barretos": "1325",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_7": {
+        "ALI Rural": "2",
+        "Atendimento Presencial ER Bauru - Resultados": "238",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Bauru": "113",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Bauru": "1551",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_8": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Botucatu - Resultados": "284",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Botucatu": "90",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Botucatu": "1301",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_9": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Campinas - Resultados": "260",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Campinas": "99",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Campinas": "1154",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_10": {
+        "ALI Rural": "2",
+        "Atendimento Presencial ER Capital Centro - Resultados": "302",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Capital Centro": "87",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Capital Centro": "2117",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_11": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Leste - Resultados": "253",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Capital Leste": "89",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Capital Leste": "1701",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_12": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Leste II - Resultados": "248",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Capital Leste II": "86",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Capital Leste II": "2118",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_13": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Capital Norte - Resultados": "237",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Capital Norte": "79",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Capital Norte": "1772",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_14": {
+        "ALI Rural": "2",
+        "Atendimento Presencial ER Capital Oeste - Resultados": "301",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "SP Atendimento Presencial - ER Capital Oeste": "112",
+        "Suporte a Negócios - ER Capital Oeste": "1684",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_15": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Capital Sul - Resultados": "287",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Cap. Sul": "91",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Capital Sul": "1740",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_24292": {},
+    "ER_44": {
+        "Atendimentos a estudantes do ensino médio de escolas estaduais": "325",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "SP - Educação que Transforma - Atendimento": "303",
+        "SP - Educação que Transforma - Conexões Estruturantes": "305",
+        "Suporte a Negócio - Cultura Empreendedora": "4055",
+        "Suporte a Negócios - Escola de Negócios Sebrae-SP": "4048",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_45": {
+        "Custeio Administrativo - ERs e Sede": "35"
+    },
+    "ER_46": {
+        "Custeio Administrativo - ERs e Sede": "35"
+    },
+    "ER_6226": {
+        "Aceleração de Startups": "122",
+        "Capacitação para gestores - startups e economia criativa": "178",
+        "Crie Audiovisual": "270",
+        "Crie Games": "272",
+        "Crie Mercado": "274",
+        "Crie Moda Autoral": "271",
+        "Crie Musica": "273",
+        "Crie Políticas Públicas": "211",
+        "Crie Produção Cultural - Credenciamento": "276",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Ecossistema": "205",
+        "Feiras Startups - Exposição em feiras Setoriais": "285",
+        "Fomento à Inovação - Subvenção": "135",
+        "Ginga Afrotech Hub": "277",
+        "Ideação Spark": "247",
+        "Ideação Universitária": "286",
+        "Polo de Referência Nacional em Economia Criativa": "309",
+        "Pré-Aceleração de Startups": "128",
+        "Suporte a Negócios - Inovação": "5378",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_35": {},
+    "ER_24707": {},
+    "ER_47": {
+        "Custeio Administrativo - ERs e Sede": "35"
+    },
+    "ER_16": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Franca - Resultados": "257",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Franca": "109",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Franca": "1001",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_48": {},
+    "ER_49": {
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Sebrae Conecta - Atendimento de parceiros": "140",
+        "Soluções Digitais - Atendimento e operação": "206",
+        "Soluções presenciais, remotas e digitais - Desenvolvimento": "197",
+        "Suporte a Negócios - Gestão de Produtos": "5292",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201",
+        "Suporte à Soluções - Projetos Internos": "204"
+    },
+    "ER_50": {},
+    "ER_17": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Grande ABC - Resultados": "251",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Grande ABC": "80",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Grande ABC": "1651",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_18": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Guaratinguetá - Resultados": "264",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Guaratinguetá": "75",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Guaratinguetá": "1298",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_19": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Guarulhos - Resultados": "294",
+        "Conexões Corporativas - Encadeamento Produtivo Direcional": "324",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Guarulhos": "114",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Guarulhos": "1268",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_20": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Jundiaí - Resultados": "256",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Jundiaí": "83",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Jundiaí": "2636",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_52": {
+        "Concilia - Jurídico e Secretaria Geral": "182",
+        "Custeio Administrativo - ERs e Sede": "35"
+    },
+    "ER_21": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Marília - Resultados": "292",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "SP - Atendimento Presencial ER Marília": "96",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Marília": "1507",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_51": {
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Suporte a Negócios - Comunicação e Marketing": "4102",
+        "Suporte a Negócios - Conteúdo Digital e Endomarketing": "4104",
+        "Suporte a Negócios - Marketing Publicidade e Propaganda": "4108",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_22": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Osasco - Resultados": "269",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "SP Atendimento Presencial - ER Osasco": "110",
+        "Suporte a Negócios - ER Osasco": "1628",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_23": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Ourinhos - Resultados": "291",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "SP - Atendimento Presencial ER Ourinhos": "101",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Ourinhos": "1671",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_53": {
+        "Custeio Administrativo - ERs e Sede": "35"
+    },
+    "ER_24": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Piracicaba - Resultados": "290",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Piracicaba": "81",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Piracicaba": "1267",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_3771": {
+        "Cidade Empreendedora - SP": "232",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "SP - Pró Catadores": "312",
+        "SP - Relações Governamentais": "316",
+        "Suporte a Negócios - Políticas Públicas": "4115",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201",
+        "Territórios Empreendedores SP": "306"
+    },
+    "ER_25": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Presidente Prudente - Resultados": "249",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Presidente Prudente": "84",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Presidente Prudente": "1608",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_54": {
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_42": {
+        "Ações de Lembrete de oferta automatizado": "239",
+        "Captação de Receitas por Editais": "179",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Enriquecimento de Inconsistências": "243",
+        "Evento Feminino": "326",
+        "Feira do Empreendedor": "59",
+        "Inbound marketing": "119",
+        "Suporte a Negócios - Relacionamento com Cliente": "3116",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_26": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Ribeirão Preto - Resultados": "281",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Ribeirão Preto": "74",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Ribeirão Preto": "1777",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_27": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER São Carlos - Resultado": "252",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER São Carlos": "95",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER São Carlos": "1674",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_28": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER São João da Boa Vista - Resultados": "280",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "SP Atendimento Presencial ER São João da Boa Vista": "93",
+        "Suporte a Negócios - ER São João da Boa Vista": "1039",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_29": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER São José do Rio Preto - Resultados": "289",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER S.José do Rio Preto": "115",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER São José do Rio Preto": "1186",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_30": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER São José dos Campos - Resultados": "288",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER São José dos Campos": "100",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER São José dos Campos": "1256",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_31": {
+        "ALI Rural": "2",
+        "CONEXÕES CORPORATIVAS": "266",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "PROJETO APEX-BRASIL - PEIEX": "310",
+        "SP - Atendimento Presencial ER Sorocaba": "82",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Sorocaba": "1137",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_32": {
+        "ALI Rural": "2",
+        "Atendimento Presencial ER Sudoeste Paulista - Resultados": "300",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "SP - Atendimento Presencial ER Sudoeste Paulista": "111",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Sudoeste Paulista": "1555",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_56": {
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Licenças e softwares": "44",
+        "Sistemas e aplicações": "51",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201",
+        "Sustentação - Infraestrutura Computacional": "56",
+        "Sustentação - Segurança da informação": "57"
+    },
+    "ER_57": {},
+    "ER_40": {
+        "ALI Rural": "2",
+        "CONEXÕES CORPORATIVAS": "266",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Fature + Agente de Gestão/Jornada Estruturada": "268",
+        "Projetos Especiais": "265",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - Desenvolvimento Setorial e Territorial": "5254",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201",
+        "Sustentabilidade e Eficiência Empresarial": "267"
+    },
+    "ER_33": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Vale do Ribeira – Resultados": "293",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "SP - Atendimento Presencial ER Vale do Ribeira": "98",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Vale do Ribeira": "1499",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    },
+    "ER_34": {
+        "ALI Rural": "2",
+        "Atendimento Presencial - ER Votuporanga - Resultados": "279",
+        "Custeio Administrativo - ERs e Sede": "35",
+        "Feira do Empreendedor": "59",
+        "SP - Atendimento Presencial ER Votuporanga": "85",
+        "SP Agente Local de Inovação (ALI) - Produtividade": "1",
+        "Suporte a Negócios - ER Votuporanga": "1759",
+        "Suporte a Negócios - Remuneração de Recursos Humanos Relacionado a Negócios": "1201"
+    }
+}

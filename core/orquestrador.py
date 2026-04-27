@@ -15,34 +15,15 @@ from core.automacao_web import registrar_no_rae, URL_RAE
 logger = configurar_logger()
 
 
-# ============================================================
-# 🔍 LOCALIZAÇÃO DO CHROMEDRIVER EMBUTIDO
-# ============================================================
-
 def _caminho_chromedriver():
-    """
-    Localiza o chromedriver.exe tanto rodando como .pyw
-    quanto empacotado como .exe pelo PyInstaller.
-    """
     if getattr(sys, 'frozen', False):
-        base = sys._MEIPASS                             # dentro do .exe compilado
+        base = sys._MEIPASS
     else:
-        base = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            '..'                                        # sobe para a raiz do projeto
-        )
+        base = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
     return os.path.normpath(os.path.join(base, 'drivers', 'chromedriver.exe'))
 
 
-# ============================================================
-# 🔢 LEITURA DE VERSÕES (Chrome instalado vs ChromeDriver embutido)
-# ============================================================
-
 def _versao_chrome_instalado() -> str | None:
-    """
-    Lê a versão do Google Chrome direto do Registro do Windows.
-    Retorna uma string como '147.0.7727.102' ou None se não encontrar.
-    """
     chaves = [
         r"SOFTWARE\Google\Chrome\BLBeacon",
         r"SOFTWARE\WOW6432Node\Google\Chrome\BLBeacon",
@@ -60,19 +41,12 @@ def _versao_chrome_instalado() -> str | None:
 
 
 def _versao_chromedriver(caminho: str) -> str | None:
-    """
-    Executa 'chromedriver --version' e extrai o número de versão.
-    Retorna uma string como '147.0.7727.94' ou None se falhar.
-    """
     try:
         resultado = subprocess.run(
             [caminho, "--version"],
-            capture_output=True,
-            text=True,
-            timeout=5,
+            capture_output=True, text=True, timeout=5,
             creationflags=subprocess.CREATE_NO_WINDOW,
         )
-        # Saída esperada: "ChromeDriver 147.0.7727.94 (hash...)"
         match = re.search(r"ChromeDriver\s+([\d.]+)", resultado.stdout)
         if match:
             return match.group(1)
@@ -82,7 +56,6 @@ def _versao_chromedriver(caminho: str) -> str | None:
 
 
 def _major(versao: str) -> int:
-    """Extrai o número major de uma versão (ex: '147.0.7727.102' → 147)."""
     try:
         return int(versao.split(".")[0])
     except (ValueError, IndexError):
@@ -90,111 +63,48 @@ def _major(versao: str) -> int:
 
 
 def verificar_compatibilidade_chrome() -> dict:
-    """
-    Compara a versão major do Chrome instalado com a do ChromeDriver embutido.
-
-    Retorna um dict com:
-      - status: "ok" | "aviso" | "erro"
-      - msg: texto descritivo para mostrar ao usuário (vazio se ok)
-      - versao_chrome: string da versão do Chrome (ou None)
-      - versao_driver: string da versão do ChromeDriver (ou None)
-    """
     caminho_driver = _caminho_chromedriver()
-
-    versao_chrome = _versao_chrome_instalado()
-    versao_driver = _versao_chromedriver(caminho_driver)
+    versao_chrome  = _versao_chrome_instalado()
+    versao_driver  = _versao_chromedriver(caminho_driver)
 
     logger.info(f"Chrome instalado: {versao_chrome} | ChromeDriver embutido: {versao_driver}")
 
-    # --- Chrome não encontrado ---
     if versao_chrome is None:
-        return {
-            "status": "aviso",
-            "msg": (
-                "⚠️  Não foi possível detectar a versão do Google Chrome instalado.\n\n"
-                "Se o programa não abrir o navegador, verifique se o Chrome está instalado."
-            ),
-            "versao_chrome": None,
-            "versao_driver": versao_driver,
-        }
+        return {"status": "aviso", "msg": "⚠️  Não foi possível detectar a versão do Google Chrome.\n\nSe o programa não abrir o navegador, verifique se o Chrome está instalado.", "versao_chrome": None, "versao_driver": versao_driver}
 
-    # --- ChromeDriver ausente ou ilegível ---
     if versao_driver is None:
-        return {
-            "status": "erro",
-            "msg": (
-                "❌  ChromeDriver não encontrado ou corrompido.\n\n"
-                f"Caminho esperado:\n{caminho_driver}\n\n"
-                "Contate o desenvolvedor para obter uma versão atualizada do programa."
-            ),
-            "versao_chrome": versao_chrome,
-            "versao_driver": None,
-        }
+        return {"status": "erro", "msg": f"❌  ChromeDriver não encontrado.\n\nCaminho esperado:\n{caminho_driver}\n\nContate o desenvolvedor.", "versao_chrome": versao_chrome, "versao_driver": None}
 
-    major_chrome = _major(versao_chrome)
-    major_driver = _major(versao_driver)
+    if _major(versao_chrome) != _major(versao_driver):
+        return {"status": "aviso", "msg": (
+            f"⚠️  Chrome ({versao_chrome}) e ChromeDriver ({versao_driver}) com versões diferentes.\n\n"
+            f"👉  Acesse https://googlechromelabs.github.io/chrome-for-testing/\n"
+            f"     Baixe o ChromeDriver para a versão {_major(versao_chrome)} e solicite atualização ao desenvolvedor."
+        ), "versao_chrome": versao_chrome, "versao_driver": versao_driver}
 
-    # --- Versões incompatíveis ---
-    if major_chrome != major_driver:
-        return {
-            "status": "aviso",
-            "msg": (
-                f"⚠️  Versão do Chrome ({versao_chrome}) e do ChromeDriver ({versao_driver}) são diferentes.\n\n"
-                "O robô pode não funcionar corretamente.\n\n"
-                "👉  Acesse https://googlechromelabs.github.io/chrome-for-testing/\n"
-                f"     Baixe o ChromeDriver para a versão {major_chrome} e "
-                "solicite ao desenvolvedor uma atualização do programa."
-            ),
-            "versao_chrome": versao_chrome,
-            "versao_driver": versao_driver,
-        }
-
-    # --- Tudo certo ---
-    return {
-        "status": "ok",
-        "msg": "",
-        "versao_chrome": versao_chrome,
-        "versao_driver": versao_driver,
-    }
+    return {"status": "ok", "msg": "", "versao_chrome": versao_chrome, "versao_driver": versao_driver}
 
 
-# ============================================================
-# 🤖 ORQUESTRADOR PRINCIPAL
-# ============================================================
-
-def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_cancelar, callback_login):
+def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_cancelar, callback_login, config_unidade):
     try:
         data_corte = datetime.strptime(data_corte_str, "%d/%m/%Y")
     except ValueError:
         return {"status": "erro", "msg": "Formato de data inválido. Use DD/MM/AAAA."}
 
     caminho_driver = _caminho_chromedriver()
-
     if not os.path.exists(caminho_driver):
-        return {
-            "status": "erro_fatal",
-            "msg": (
-                f"chromedriver.exe não encontrado em:\n{caminho_driver}\n\n"
-                "Contate o desenvolvedor."
-            ),
-        }
+        return {"status": "erro_fatal", "msg": f"chromedriver.exe não encontrado em:\n{caminho_driver}\n\nContate o desenvolvedor."}
 
     try:
         opcoes = webdriver.ChromeOptions()
         opcoes.add_experimental_option('excludeSwitches', ['enable-logging'])
-
         servico = Service(executable_path=caminho_driver)
         servico.creation_flags = subprocess.CREATE_NO_WINDOW
-
         driver = webdriver.Chrome(service=servico, options=opcoes)
         driver.maximize_window()
         driver.get(URL_RAE)
-
     except Exception as e:
-        return {
-            "status": "erro_fatal",
-            "msg": f"O robô não conseguiu abrir o Google Chrome.\n\nMotivo Técnico:\n{e}",
-        }
+        return {"status": "erro_fatal", "msg": f"O robô não conseguiu abrir o Google Chrome.\n\nMotivo Técnico:\n{e}"}
 
     callback_login()
 
@@ -234,7 +144,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
             nome_cliente, cnpj_cliente = ler_pdf_padrao(caminho_completo, "NOME CIVIL")
         elif nome_arquivo.startswith("CCMEI"):
             servico_nome = "Alteracao"
-        elif nome_arquivo.startswith("DASN-"):
+        elif nome_arquivo.startswith("DASNSIMEI-"):
             servico_nome = "Declaracao"
             palavra_chave = "dasn"
             servico_exato = "MEI - Declaração Anual do Simples Nacional - DASN - SIMEI"
@@ -272,10 +182,11 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                 arquivos_movidos += 1
 
                 dados_atendimento = {
-                    'cnpj': cnpj_cliente,
-                    'palavra_chave': palavra_chave,
-                    'servico_exato': servico_exato,
-                    'data_arquivo': data_formatada,
+                    'cnpj':           cnpj_cliente,
+                    'palavra_chave':  palavra_chave,
+                    'servico_exato':  servico_exato,
+                    'data_arquivo':   data_formatada,
+                    'config_unidade': config_unidade,
                 }
 
                 sucesso = registrar_no_rae(driver, dados_atendimento)
@@ -287,8 +198,4 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
     if evento_cancelar.is_set():
         return {"status": "cancelado"}
 
-    return {
-        "status": "sucesso",
-        "arquivos": arquivos_movidos,
-        "erros": list(set(cnpjs_com_erro)),
-    }
+    return {"status": "sucesso", "arquivos": arquivos_movidos, "erros": list(set(cnpjs_com_erro))}
