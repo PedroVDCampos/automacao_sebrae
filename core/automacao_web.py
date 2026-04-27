@@ -86,7 +86,7 @@ def registrar_no_rae(driver, dados):
         
         if "Nenhum registro encontrado" in driver.page_source or "desatualizado" in driver.page_source.lower():
             logger.warning(f"CNPJ {dados['cnpj']} não encontrado ou desatualizado.")
-            return False 
+            return "nao_encontrado" 
 
         # 2. EDIÇÃO (O LÁPIS)
         try:

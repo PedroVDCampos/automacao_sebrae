@@ -5,6 +5,8 @@ import re
 import time
 import subprocess
 import winreg
+import winsound
+import ctypes
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -14,14 +16,12 @@ from core.automacao_web import registrar_no_rae, URL_RAE
 
 logger = configurar_logger()
 
-
 def _caminho_chromedriver():
     if getattr(sys, 'frozen', False):
         base = sys._MEIPASS
     else:
         base = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
     return os.path.normpath(os.path.join(base, 'drivers', 'chromedriver.exe'))
-
 
 def _versao_chrome_instalado() -> str | None:
     chaves = [
@@ -39,7 +39,6 @@ def _versao_chrome_instalado() -> str | None:
                 continue
     return None
 
-
 def _versao_chromedriver(caminho: str) -> str | None:
     try:
         resultado = subprocess.run(
@@ -54,13 +53,11 @@ def _versao_chromedriver(caminho: str) -> str | None:
         pass
     return None
 
-
 def _major(versao: str) -> int:
     try:
         return int(versao.split(".")[0])
     except (ValueError, IndexError):
         return -1
-
 
 def verificar_compatibilidade_chrome() -> dict:
     caminho_driver = _caminho_chromedriver()
@@ -70,20 +67,18 @@ def verificar_compatibilidade_chrome() -> dict:
     logger.info(f"Chrome instalado: {versao_chrome} | ChromeDriver embutido: {versao_driver}")
 
     if versao_chrome is None:
-        return {"status": "aviso", "msg": "⚠️  Não foi possível detectar a versão do Google Chrome.\n\nSe o programa não abrir o navegador, verifique se o Chrome está instalado.", "versao_chrome": None, "versao_driver": versao_driver}
+        return {"status": "aviso", "msg": "⚠️ Não foi possível detectar a versão do Google Chrome.\n\nSe o programa não abrir o navegador, verifique se o Chrome está instalado.", "versao_chrome": None, "versao_driver": versao_driver}
 
     if versao_driver is None:
-        return {"status": "erro", "msg": f"❌  ChromeDriver não encontrado.\n\nCaminho esperado:\n{caminho_driver}\n\nContate o desenvolvedor.", "versao_chrome": versao_chrome, "versao_driver": None}
+        return {"status": "erro", "msg": f"❌ ChromeDriver não encontrado.\n\nCaminho esperado:\n{caminho_driver}\n\nContate o desenvolvedor.", "versao_chrome": versao_chrome, "versao_driver": None}
 
     if _major(versao_chrome) != _major(versao_driver):
         return {"status": "aviso", "msg": (
-            f"⚠️  Chrome ({versao_chrome}) e ChromeDriver ({versao_driver}) com versões diferentes.\n\n"
-            f"👉  Acesse https://googlechromelabs.github.io/chrome-for-testing/\n"
-            f"     Baixe o ChromeDriver para a versão {_major(versao_chrome)} e solicite atualização ao desenvolvedor."
+            f"⚠️ Chrome ({versao_chrome}) e ChromeDriver ({versao_driver}) com versões diferentes.\n\n"
+            f"👉 Baixe o ChromeDriver para a versão {_major(versao_chrome)} e solicite atualização ao desenvolvedor."
         ), "versao_chrome": versao_chrome, "versao_driver": versao_driver}
 
     return {"status": "ok", "msg": "", "versao_chrome": versao_chrome, "versao_driver": versao_driver}
-
 
 def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_cancelar, callback_login, config_unidade):
     try:
@@ -104,7 +99,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
         driver.maximize_window()
         driver.get(URL_RAE)
     except Exception as e:
-        return {"status": "erro_fatal", "msg": f"O robô não conseguiu abrir o Google Chrome.\n\nMotivo Técnico:\n{e}"}
+        return {"status": "erro_fatal", "msg": f"O robô não conseguiu abrir o Chrome.\n\nMotivo Técnico:\n{e}"}
 
     callback_login()
 
@@ -115,6 +110,9 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
     arquivos_movidos = 0
     cnpjs_com_erro = []
     logger.info("--- INÍCIO DE NOVA EXECUÇÃO ---")
+    
+    # 🧠 MEMÓRIA DE CURTO PRAZO (Evita o problema da Onipresença)
+    memoria_atendimentos = set()
 
     for nome_arquivo in os.listdir(pasta_origem):
         if evento_cancelar.is_set():
@@ -181,19 +179,76 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                 shutil.move(caminho_completo, destino_final)
                 arquivos_movidos += 1
 
-                dados_atendimento = {
-                    'cnpj':           cnpj_cliente,
-                    'palavra_chave':  palavra_chave,
-                    'servico_exato':  servico_exato,
-                    'data_arquivo':   data_formatada,
-                    'config_unidade': config_unidade,
-                }
+            # 🛡️ FILTRO DE ONIPRESENÇA: Verifica se já atendeu esse CNPJ hoje para o mesmo serviço
+            assinatura_atendimento = f"{cnpj_cliente}_{data_formatada.strftime('%Y-%m-%d')}_{servico_exato}"
+            if assinatura_atendimento in memoria_atendimentos:
+                logger.info(f"⏭️ Duplicidade barrada: CNPJ {cnpj_cliente} já recebeu o serviço '{servico_exato}' hoje. Arquivo apenas organizado.")
+                continue
 
-                sucesso = registrar_no_rae(driver, dados_atendimento)
-                if not sucesso:
+            dados_atendimento = {
+                'cnpj':           cnpj_cliente,
+                'palavra_chave':  palavra_chave,
+                'servico_exato':  servico_exato,
+                'data_arquivo':   data_formatada,
+                'config_unidade': config_unidade,
+            }
+
+            # 🚀 LANÇAMENTO NO RAE
+            sucesso = registrar_no_rae(driver, dados_atendimento)
+            
+            if sucesso == True:
+                memoria_atendimentos.add(assinatura_atendimento)
+                
+            elif sucesso == "nao_encontrado":
+                # CNPJ não existe no sistema do Sebrae. Não precisa reiniciar o navegador.
+                cnpjs_com_erro.append(f"{cnpj_cliente} (Não Encontrado)")
+                
+            else:
+                # 🛑 FALHA CRÔNICA: Se retornou False, o botão prosseguir ou o site travou.
+                logger.warning(f"⚠️ Travamento detectado no CNPJ {cnpj_cliente}. Iniciando Protocolo de Segurança (Restart)...")
+                
+                # Dispara Alarme Sonoro de Alerta
+                for _ in range(4):
+                    winsound.Beep(1500, 400)
+                    time.sleep(0.1)
+                
+                try: driver.quit()
+                except: pass
+
+                try:
+                    # Recria o navegador do zero para limpar os erros do Sebrae
+                    servico_novo = Service(executable_path=caminho_driver)
+                    servico_novo.creation_flags = subprocess.CREATE_NO_WINDOW
+                    driver = webdriver.Chrome(service=servico_novo, options=opcoes)
+                    driver.maximize_window()
+                    driver.get(URL_RAE)
+                except Exception as e:
+                    return {"status": "erro_fatal", "msg": f"Erro crítico ao tentar reiniciar o navegador: {e}"}
+
+                # Pausa Nativa com alerta por cima de todas as janelas
+                ctypes.windll.user32.MessageBoxW(
+                    0,
+                    f"O robô travou no CNPJ: {cnpj_cliente}\nO navegador foi reiniciado para limpar o cache do Sebrae.\n\n"
+                    "1. Faça o LOGIN novamente.\n"
+                    "2. Vá até a tela de 'Pesquisa Clientes'.\n"
+                    "3. Clique em OK para o robô tentar o atendimento mais uma vez.",
+                    "⚠️ Reinício de Segurança (RAE Turbo)",
+                    0x30 | 0x40000
+                )
+                
+                # Segunda Tentativa!
+                logger.info(f"🔄 Tentativa de resgate do CNPJ {cnpj_cliente}...")
+                sucesso_retry = registrar_no_rae(driver, dados_atendimento)
+                
+                if sucesso_retry == True:
+                    logger.info("✅ Resgate bem-sucedido após reinício!")
+                    memoria_atendimentos.add(assinatura_atendimento)
+                else:
+                    logger.error(f"❌ O CNPJ {cnpj_cliente} falhou definitivamente.")
                     cnpjs_com_erro.append(cnpj_cliente)
 
-    driver.quit()
+    try: driver.quit()
+    except: pass
 
     if evento_cancelar.is_set():
         return {"status": "cancelado"}
