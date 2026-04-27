@@ -30,7 +30,7 @@ jobs:
           --add-data "drivers/chromedriver.exe;drivers" `
           --add-data "assets;assets" `
           --add-data "data;data" `
-          --name="RAE_Turbo" main.pyw
+          --name="RAE_Turbo" app/main.pyw
 
       - name: Gerar SHA-256
         shell: powershell
