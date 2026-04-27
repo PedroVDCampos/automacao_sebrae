@@ -7,12 +7,10 @@ dist/
 __pycache__/
 *.log
 config_unidade.json
-*.txt
 __pycache__/
 *.pyc
 build/
 dist/
-*.spec
 *.log
 .env
 venv/
