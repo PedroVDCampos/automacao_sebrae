@@ -69,22 +69,16 @@ chcp 65001 > nul
 cd /d "{pasta_app}"
 
 echo Aguardando o RAE Turbo encerrar...
-timeout /t 4 /nobreak > nul
-
-:aguardar_fechamento
-tasklist /FI "IMAGENAME eq {nome_exe}" | find /I "{nome_exe}" > nul
-if not errorlevel 1 (
-    timeout /t 1 /nobreak > nul
-    goto aguardar_fechamento
-)
+timeout /t 5 /nobreak > nul
 
 echo Aplicando atualização...
 move /Y "{caminho_novo_exe}" "{exe_atual}"
 
-echo Aguardando arquivos temporários...
-timeout /t 3 /nobreak > nul
+echo Aguardando finalização...
+timeout /t 2 /nobreak > nul
 
 echo Reiniciando RAE Turbo...
+set PYINSTALLER_RESET_ENVIRONMENT=1
 start "" "{exe_atual}"
 
 timeout /t 1 /nobreak > nul

@@ -276,7 +276,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
         elif nome_arquivo.startswith("ExibirDAS-"):
             servico_nome = "Parcelamento"
             palavra_chave = "parcelamento"
-            servico_exato = "MEI - Parcelamento de Débitos"
+            servico_exato = "MEI - Parcelamentos de Débitos"
             nome_cliente, cnpj_cliente = ler_boleto_parcelamento(caminho_completo)
         elif "baixa" in nome_arquivo.lower():
             nome_cliente, cnpj_cliente = ler_pdf_padrao(caminho_completo, "CERTIDÃO DE BAIXA")
@@ -303,7 +303,6 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
 
         resumo['pdfs_processados'] += 1
 
-        # 🛡️ FILTRO DE ONIPRESENÇA: Verifica se já atendeu esse CNPJ hoje para o mesmo serviço
         assinatura_atendimento = f"{cnpj_cliente}_{data_formatada.strftime('%Y-%m-%d')}_{servico_exato}"
         if assinatura_atendimento in memoria_atendimentos:
             resumo['duplicidades_barradas'] += 1

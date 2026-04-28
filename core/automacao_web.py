@@ -9,6 +9,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 from utils.logger import configurar_logger
 from utils.paths import data_path
 from utils.privacy import mascarar_cnpj
@@ -164,37 +165,86 @@ def registrar_no_rae(driver, dados):
         campo_busca.send_keys(dados['palavra_chave'])
         time.sleep(0.5)
         campo_busca.send_keys(Keys.ENTER)
-        time.sleep(2) # Aguarda requisição AJAX do site
-        
+        time.sleep(2)  # Aguarda requisição AJAX do site
+
         try:
-            btn_efetuar_busca = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'efetuar busca', 'EFETUAR BUSCA'), 'EFETUAR BUSCA')]")))
+            btn_efetuar_busca = wait.until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//button[contains(translate(text(), 'efetuar busca', 'EFETUAR BUSCA'), 'EFETUAR BUSCA')]")
+                )
+            )
             clicar_js(driver, btn_efetuar_busca) 
             time.sleep(1.5)
         except:
             pass 
-        
-        xpath_opcao = f"//select[@id='ServicosDisponiveis']//option[contains(text(), '{dados['servico_exato']}')]"
-        wait.until(EC.presence_of_element_located((By.XPATH, xpath_opcao)))
-        
-        caixa_servicos = driver.find_element(By.ID, "ServicosDisponiveis")
+
+        servico_exato = dados["servico_exato"].strip()
+
+        caixa_servicos = wait.until(
+            EC.presence_of_element_located((By.ID, "ServicosDisponiveis"))
+        )
+
         selecao = Select(caixa_servicos)
-        selecao.select_by_visible_text(dados['servico_exato'])
-        
+
+        # Garante que nenhuma opção antiga ficou selecionada
+        try:
+            selecao.deselect_all()
+        except Exception:
+            pass
+
+        opcao_encontrada = None
+
+        for opcao in selecao.options:
+            texto_opcao = opcao.text.strip()
+
+            if texto_opcao == servico_exato:
+                opcao_encontrada = opcao
+                break
+
+        if opcao_encontrada is None:
+            logger.error(f"Serviço exato não encontrado no RAE: {servico_exato}")
+            return False
+
+        driver.execute_script(
+            "arguments[0].selected = true;"
+            "arguments[0].dispatchEvent(new Event('change', { bubbles: true }));",
+            opcao_encontrada
+        )
+
+        logger.info(f"Serviço selecionado uma única vez: {servico_exato}")
+
         time.sleep(1)
-        btn_adicionar_servico = wait.until(EC.presence_of_element_located((By.XPATH, "//i[contains(@class, 'frente')]/parent::*")))
+
+        btn_adicionar_servico = wait.until(
+            EC.presence_of_element_located((By.XPATH, "//i[contains(@class, 'frente')]/parent::*"))
+        )
         clicar_js(driver, btn_adicionar_servico)
         time.sleep(1.5)
-        
+
         # PREENCHIMENTO DOS DADOS FINAIS E PLANO
-        campo_necessidade = wait.until(EC.presence_of_element_located((By.XPATH, "//textarea[contains(@id, 'Necessidade') or contains(@name, 'Necessidade')]")))
-        driver.execute_script(f"arguments[0].value = '{dados['servico_exato']}';", campo_necessidade)
-        driver.execute_script("arguments[0].dispatchEvent(new Event('change'));", campo_necessidade)
+        campo_necessidade = wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//textarea[contains(@id, 'Necessidade') or contains(@name, 'Necessidade')]")
+            )
+        )
+
+        driver.execute_script(
+            "arguments[0].value = arguments[1];"
+            "arguments[0].dispatchEvent(new Event('change', { bubbles: true }));",
+            campo_necessidade,
+            servico_exato
+        )
+
         time.sleep(1)
-        
-        btn_plano = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'incluir plano orçamentário', 'INCLUIR PLANO ORÇAMENTÁRIO'), 'INCLUIR PLANO ORÇAMENTÁRIO')]")))
+
+        btn_plano = wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//button[contains(translate(text(), 'incluir plano orçamentário', 'INCLUIR PLANO ORÇAMENTÁRIO'), 'INCLUIR PLANO ORÇAMENTÁRIO')]")
+            )
+        )
         clicar_js(driver, btn_plano)
-        
-        time.sleep(2) 
+
+        time.sleep(2)
         try:
             # INJEÇÃO COM OS DADOS DINÂMICOS
             driver.execute_script(f"$('#UnidadeModal').val('{id_unidade}').trigger('change');")

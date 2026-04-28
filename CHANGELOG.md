@@ -1,5 +1,7 @@
-## [v1.2.2]
+## [v1.2.3]
 
 ### Corrigido
-- Ajustado o processo de reinicialização após atualização automática.
-- Adicionada espera antes de abrir a nova versão para evitar erro de carregamento da DLL temporária do PyInstaller.
+- Corrigido erro `Failed to load Python DLL` após atualização automática.
+- O reinício após atualização agora usa `PYINSTALLER_RESET_ENVIRONMENT=1` para evitar reutilização incorreta dos arquivos temporários do PyInstaller.
+- Corrigido nome exato do serviço de parcelamento no RAE.
+- Ajustada seleção de serviço para evitar múltiplas marcações quando o RAE exibe opções duplicadas com o mesmo nome.
