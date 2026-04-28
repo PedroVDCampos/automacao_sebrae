@@ -1,12 +1,9 @@
-## [v1.1.8]
-
-### Adicionado
-- Relatório final de execução.
-- Contagem de PDFs encontrados, processados, ignorados e fora da data.
-- Contagem de RAEs lançados com sucesso.
-- Contagem de duplicidades barradas.
-- Registro de CNPJs não encontrados e falhas definitivas.
-- Salvamento automático do último relatório em AppData/Local/RAETurbo.
+## [v1.2.0]
 
 ### Melhorado
-- Mensagem final da automação agora apresenta indicadores mais úteis para conferência e medição de produtividade.
+- PDFs agora só são enviados para a pasta final após confirmação de lançamento no RAE.
+- PDFs com erro são movidos para `_ERROS_RAE_TURBO` dentro da pasta de origem.
+- Separação de erros por motivo: CNPJ não encontrado, falha definitiva, duplicidade e dados insuficientes.
+
+### Corrigido
+- Evita que PDFs com atendimento não registrado sejam arquivados como se tivessem sido concluídos.
