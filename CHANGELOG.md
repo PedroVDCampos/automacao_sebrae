@@ -1,5 +1,10 @@
 ## [v1.2.1]
 
+### Adicionado
+- Tempo médio por RAE lançado no relatório final.
+- Tempo médio por PDF processado no relatório final.
+- Histórico de execuções em CSV para análise em planilha.
+- Relatório individual por execução em TXT.
+
 ### Melhorado
-- No relátrio final é mostrado também o tempo médio por atendimento
-- Arquivos .txt seram gerados e armazenados após cada execução
+- Relatório final agora apresenta métricas mais úteis para comprovação de produtividade.
