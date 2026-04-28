@@ -1,10 +1,5 @@
-## [v1.2.1]
+## [v1.2.2]
 
-### Adicionado
-- Tempo médio por RAE lançado no relatório final.
-- Tempo médio por PDF processado no relatório final.
-- Histórico de execuções em CSV para análise em planilha.
-- Relatório individual por execução em TXT.
-
-### Melhorado
-- Relatório final agora apresenta métricas mais úteis para comprovação de produtividade.
+### Corrigido
+- Ajustado o processo de reinicialização após atualização automática.
+- Adicionada espera antes de abrir a nova versão para evitar erro de carregamento da DLL temporária do PyInstaller.

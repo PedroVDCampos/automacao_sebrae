@@ -56,41 +56,46 @@ def verificar_atualizacao():
     except Exception as e:
         logger.error(f"Erro inesperado ao verificar atualizações: {e}")
 
-def aplicar_atualizacao(url_download: str, tamanho_esperado: int | None = None):
-    try:
-        pasta_execucao = executable_dir()
-        nome_executavel_atual = Path(sys.executable).name if getattr(sys, "frozen", False) else EXECUTABLE_NAME
-        novo_exe_tmp = update_temp_path()
-        with requests.get(url_download, stream=True, timeout=TIMEOUT_REQUEST) as resposta:
-            resposta.raise_for_status()
-            with open(novo_exe_tmp, "wb") as f:
-                for chunk in resposta.iter_content(chunk_size=1024 * 1024):
-                    if chunk:
-                        f.write(chunk)
-        tamanho_baixado = novo_exe_tmp.stat().st_size
-        if tamanho_baixado <= 0:
-            raise RuntimeError("O arquivo baixado está vazio.")
-        if tamanho_esperado and abs(tamanho_baixado - int(tamanho_esperado)) > 1024:
-            raise RuntimeError("O tamanho do arquivo baixado não confere com o informado pelo GitHub.")
-        script_bat = update_bat_path()
-        conteudo_bat = f'''@echo off
-cd /d "{pasta_execucao}"
-:tentar_deletar
-timeout /t 1 /nobreak > NUL
-del /f /q "{nome_executavel_atual}"
-if exist "{nome_executavel_atual}" goto tentar_deletar
+def aplicar_atualizacao(caminho_novo_exe: str):
+    exe_atual = Path(sys.executable).resolve()
+    pasta_app = exe_atual.parent
+    nome_exe = exe_atual.name
 
-ren "{novo_exe_tmp.name}" "{nome_executavel_atual}"
+    caminho_novo_exe = Path(caminho_novo_exe).resolve()
+    bat_path = pasta_app / "atualizar_rae_turbo.bat"
 
-set _MEIPASS2=
-set _MEIPASS=
+    conteudo_bat = f"""@echo off
+chcp 65001 > nul
+cd /d "{pasta_app}"
 
-start "" "{nome_executavel_atual}"
+echo Aguardando o RAE Turbo encerrar...
+timeout /t 4 /nobreak > nul
+
+:aguardar_fechamento
+tasklist /FI "IMAGENAME eq {nome_exe}" | find /I "{nome_exe}" > nul
+if not errorlevel 1 (
+    timeout /t 1 /nobreak > nul
+    goto aguardar_fechamento
+)
+
+echo Aplicando atualização...
+move /Y "{caminho_novo_exe}" "{exe_atual}"
+
+echo Aguardando arquivos temporários...
+timeout /t 3 /nobreak > nul
+
+echo Reiniciando RAE Turbo...
+start "" "{exe_atual}"
+
+timeout /t 1 /nobreak > nul
 del "%~f0"
-'''
-        script_bat.write_text(conteudo_bat, encoding="utf-8")
-        subprocess.Popen(str(script_bat), shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
-        sys.exit()
-    except Exception as e:
-        logger.error(f"Erro ao aplicar atualização: {e}")
-        messagebox.showerror("Erro na atualização", f"Não foi possível atualizar o RAE Turbo.\n\nMotivo: {e}")
+"""
+
+    bat_path.write_text(conteudo_bat, encoding="utf-8")
+
+    subprocess.Popen(
+        ["cmd", "/c", str(bat_path)],
+        creationflags=subprocess.CREATE_NO_WINDOW
+    )
+
+    sys.exit(0)

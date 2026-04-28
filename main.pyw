@@ -155,7 +155,7 @@ class DialogSobre(ctk.CTkToplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Sobre o RAE Turbo")
-        self.geometry("520x430")
+        self.geometry("580x500")
         self.resizable(False, False)
         self.grab_set()
         self.after(50, self._centralizar, parent)
@@ -187,6 +187,11 @@ class DialogSobre(ctk.CTkToplevel):
             f"Histórico CSV:\n{caminho_historico_execucoes()}"
         )
         ctk.CTkLabel(frame, text=info, justify="left", text_color="gray80", wraplength=440).pack(anchor="w", padx=20, pady=(0, 14))
+
+        texto = (
+            "- Desenvolvido por Pedro Vithor Demétrio de Campos\n"
+        )
+        ctk.CTkLabel(frame, text=texto, justify="left", wraplength=440).pack(anchor="w", padx=20, pady=(0, 14))
 
         botoes = ctk.CTkFrame(frame, fg_color="transparent")
         botoes.pack(fill="x", padx=20, pady=(4, 18))
