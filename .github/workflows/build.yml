@@ -30,7 +30,7 @@ jobs:
           --add-data "drivers/chromedriver.exe;drivers" `
           --add-data "assets;assets" `
           --add-data "data;data" `
-          --name="RAE_Turbo" app/main.pyw
+          --name="RAE Turbo" main.pyw
 
       - name: Gerar SHA-256
         shell: powershell
@@ -49,5 +49,5 @@ jobs:
 
             O RAE Turbo verificará esta atualização automaticamente na próxima abertura.
 
-            Arquivo principal: `RAE_Turbo.exe`
+            Arquivo principal: `RAE Turbo.exe`
             Hash SHA-256 disponível em `RAE_Turbo.exe.sha256`.
