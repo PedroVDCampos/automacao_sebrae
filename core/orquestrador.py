@@ -13,6 +13,7 @@ from selenium.webdriver.chrome.service import Service
 from utils.logger import configurar_logger
 from utils.paths import resource_path
 from utils.privacy import mascarar_cnpj, nome_seguro_para_pasta
+from utils.relatorio_execucao import novo_resumo_execucao, finalizar_resumo_execucao
 from core.extrator_pdf import ler_pdf_padrao, ler_boleto_parcelamento
 from core.automacao_web import registrar_no_rae, URL_RAE
 
@@ -114,6 +115,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
 
     arquivos_movidos = 0
     cnpjs_com_erro = []
+    resumo = novo_resumo_execucao(pasta_origem, pasta_destino_raiz, data_corte_str)
     logger.info("--- INÍCIO DE NOVA EXECUÇÃO ---")
     
     # 🧠 MEMÓRIA DE CURTO PRAZO (Evita o problema da Onipresença)
@@ -127,11 +129,13 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
         if not nome_arquivo.lower().endswith('.pdf'):
             continue
 
+        resumo['pdfs_encontrados'] += 1
         caminho_completo = os.path.join(pasta_origem, nome_arquivo)
         data_criacao = os.path.getmtime(caminho_completo)
         data_formatada = datetime.fromtimestamp(data_criacao)
 
         if data_formatada < data_corte:
+            resumo['pdfs_fora_da_data'] += 1
             continue
 
         servico_nome = ""
@@ -172,6 +176,16 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                 palavra_chave = "baixa"
                 servico_exato = "Baixa de Inscrição no CNPJ"
 
+        if not (servico_nome and cnpj_cliente):
+            if servico_nome and not cnpj_cliente:
+                resumo['pdfs_sem_dados'] += 1
+                logger.warning(f"⚠️ PDF sem dados suficientes para processamento: {nome_arquivo}")
+            else:
+                resumo['pdfs_ignorados'] += 1
+            continue
+
+        resumo['pdfs_processados'] += 1
+
         if servico_nome and cnpj_cliente:
             ano = str(data_formatada.year)
             mes = data_formatada.strftime('%m')
@@ -183,10 +197,14 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
             if not os.path.exists(destino_final):
                 shutil.move(caminho_completo, destino_final)
                 arquivos_movidos += 1
+                resumo['arquivos_organizados'] += 1
+            else:
+                resumo['arquivos_ja_existentes'] += 1
 
             # 🛡️ FILTRO DE ONIPRESENÇA: Verifica se já atendeu esse CNPJ hoje para o mesmo serviço
             assinatura_atendimento = f"{cnpj_cliente}_{data_formatada.strftime('%Y-%m-%d')}_{servico_exato}"
             if assinatura_atendimento in memoria_atendimentos:
+                resumo['duplicidades_barradas'] += 1
                 logger.info(f"⏭️ Duplicidade barrada: CNPJ {mascarar_cnpj(cnpj_cliente)} já recebeu o serviço '{servico_exato}' hoje. Arquivo apenas organizado.")
                 continue
 
@@ -202,11 +220,15 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
             sucesso = registrar_no_rae(driver, dados_atendimento)
             
             if sucesso == True:
+                resumo['raes_lancados'] += 1
                 memoria_atendimentos.add(assinatura_atendimento)
                 
             elif sucesso == "nao_encontrado":
                 # CNPJ não existe no sistema do Sebrae. Não precisa reiniciar o navegador.
-                cnpjs_com_erro.append(f"{mascarar_cnpj(cnpj_cliente)} (Não Encontrado)")
+                cnpj_mascarado = mascarar_cnpj(cnpj_cliente)
+                resumo['cnpjs_nao_encontrados'] += 1
+                resumo['erros'].append({'cnpj': cnpj_mascarado, 'motivo': 'Não encontrado no RAE'})
+                cnpjs_com_erro.append(f"{cnpj_mascarado} (Não Encontrado)")
                 
             else:
                 # 🛑 FALHA CRÔNICA: Se retornou False, o botão prosseguir ou o site travou.
@@ -228,7 +250,8 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                     driver.maximize_window()
                     driver.get(URL_RAE)
                 except Exception as e:
-                    return {"status": "erro_fatal", "msg": f"Erro crítico ao tentar reiniciar o navegador: {e}"}
+                    resumo_final = finalizar_resumo_execucao(resumo, "erro_fatal")
+                    return {"status": "erro_fatal", "msg": f"Erro crítico ao tentar reiniciar o navegador: {e}", "resumo": resumo_final}
 
                 # Pausa Nativa com alerta por cima de todas as janelas
                 ctypes.windll.user32.MessageBoxW(
@@ -247,15 +270,21 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                 
                 if sucesso_retry == True:
                     logger.info("✅ Resgate bem-sucedido após reinício!")
+                    resumo['raes_lancados'] += 1
                     memoria_atendimentos.add(assinatura_atendimento)
                 else:
-                    logger.error(f"❌ O CNPJ {mascarar_cnpj(cnpj_cliente)} falhou definitivamente.")
-                    cnpjs_com_erro.append(mascarar_cnpj(cnpj_cliente))
+                    cnpj_mascarado = mascarar_cnpj(cnpj_cliente)
+                    logger.error(f"❌ O CNPJ {cnpj_mascarado} falhou definitivamente.")
+                    resumo['falhas_definitivas'] += 1
+                    resumo['erros'].append({'cnpj': cnpj_mascarado, 'motivo': 'Falha definitiva após tentativa de resgate'})
+                    cnpjs_com_erro.append(cnpj_mascarado)
 
     try: driver.quit()
     except: pass
 
     if evento_cancelar.is_set():
-        return {"status": "cancelado"}
+        resumo_final = finalizar_resumo_execucao(resumo, "cancelado")
+        return {"status": "cancelado", "resumo": resumo_final}
 
-    return {"status": "sucesso", "arquivos": arquivos_movidos, "erros": list(set(cnpjs_com_erro))}
+    resumo_final = finalizar_resumo_execucao(resumo, "sucesso")
+    return {"status": "sucesso", "arquivos": arquivos_movidos, "erros": list(set(cnpjs_com_erro)), "resumo": resumo_final}

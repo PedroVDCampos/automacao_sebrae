@@ -9,6 +9,7 @@ from core.orquestrador import processar_tudo, verificar_compatibilidade_chrome
 from core.automacao_web import MAPA_UNIDADES, carregar_base_dados
 from utils.paths import config_path, resource_path
 from utils.updater import verificar_atualizacao
+from utils.relatorio_execucao import formatar_resumo_para_usuario
 from version import VERSAO_ATUAL
 
 ctk.set_appearance_mode("Dark")
@@ -251,13 +252,16 @@ class App(ctk.CTk):
         self.label_status.configure(text="Pronto para iniciar.")
         status = r.get("status")
         if status == "sucesso":
-            arquivos = r.get("arquivos", 0)
-            erros = r.get("erros", [])
-            messagebox.showinfo("Sucesso", f"Processo concluído.\n\nArquivos organizados: {arquivos}\nErros/pendências: {len(erros)}")
+            mensagem = formatar_resumo_para_usuario(r.get("resumo", {}))
+            messagebox.showinfo("Resumo da execução", mensagem)
         elif status in ("erro", "erro_fatal"):
-            messagebox.showerror("Erro", r.get("msg", "Ocorreu um erro durante o processo."))
+            mensagem_erro = r.get("msg", "Ocorreu um erro durante o processo.")
+            if r.get("resumo"):
+                mensagem_erro += "\n\n" + formatar_resumo_para_usuario(r.get("resumo", {}))
+            messagebox.showerror("Erro", mensagem_erro)
         elif status == "cancelado":
-            messagebox.showinfo("Cancelado", "Automação interrompida com sucesso.")
+            mensagem = formatar_resumo_para_usuario(r.get("resumo", {})) if r.get("resumo") else "Automação interrompida com sucesso."
+            messagebox.showinfo("Cancelado", mensagem)
         else:
             messagebox.showwarning("Atenção", f"Processo finalizado com status inesperado: {status}")
 
