@@ -1,4 +1,5 @@
 import json
+import os
 import threading
 import time
 
@@ -7,9 +8,14 @@ from tkinter import filedialog, messagebox
 
 from core.orquestrador import processar_tudo, verificar_compatibilidade_chrome
 from core.automacao_web import MAPA_UNIDADES, carregar_base_dados
-from utils.paths import config_path, resource_path
+from utils.paths import appdata_dir, config_path, resource_path
 from utils.updater import verificar_atualizacao
-from utils.relatorio_execucao import formatar_resumo_para_usuario
+from utils.relatorio_execucao import (
+    caminho_historico_execucoes,
+    caminho_pasta_relatorios,
+    caminho_relatorio_execucao,
+    formatar_resumo_para_usuario,
+)
 from version import VERSAO_ATUAL
 
 ctk.set_appearance_mode("Dark")
@@ -145,11 +151,68 @@ class DialogConfiguracoes(ctk.CTkToplevel):
         self.destroy()
 
 
+class DialogSobre(ctk.CTkToplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Sobre o RAE Turbo")
+        self.geometry("520x430")
+        self.resizable(False, False)
+        self.grab_set()
+        self.after(50, self._centralizar, parent)
+        self._montar_ui()
+
+    def _montar_ui(self):
+        frame = ctk.CTkFrame(self)
+        frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        ctk.CTkLabel(
+            frame,
+            text="RAE Turbo",
+            font=ctk.CTkFont(size=24, weight="bold"),
+        ).pack(pady=(18, 4))
+
+        ctk.CTkLabel(frame, text=f"Versão: {VERSAO_ATUAL}", text_color="gray75").pack(pady=(0, 16))
+
+        texto = (
+            "Automação desktop para organização dos PDFs de atendimentos MEI "
+            "e registro dos atendimentos no RAE.\n\n"
+            "A ferramenta utiliza o login do próprio usuário autorizado, "
+            "gera relatório final de execução e mantém histórico em CSV para acompanhamento de produtividade."
+        )
+        ctk.CTkLabel(frame, text=texto, justify="left", wraplength=440).pack(anchor="w", padx=20, pady=(0, 14))
+
+        info = (
+            f"Pasta de dados do app:\n{appdata_dir()}\n\n"
+            f"Último relatório:\n{caminho_relatorio_execucao()}\n\n"
+            f"Histórico CSV:\n{caminho_historico_execucoes()}"
+        )
+        ctk.CTkLabel(frame, text=info, justify="left", text_color="gray80", wraplength=440).pack(anchor="w", padx=20, pady=(0, 14))
+
+        botoes = ctk.CTkFrame(frame, fg_color="transparent")
+        botoes.pack(fill="x", padx=20, pady=(4, 18))
+
+        ctk.CTkButton(botoes, text="Abrir pasta de relatórios", command=self._abrir_pasta_relatorios).pack(side="left", expand=True, padx=(0, 6))
+        ctk.CTkButton(botoes, text="Fechar", fg_color="gray40", command=self.destroy).pack(side="left", expand=True, padx=(6, 0))
+
+    def _abrir_pasta_relatorios(self):
+        caminho = caminho_pasta_relatorios()
+        try:
+            os.startfile(caminho)
+        except Exception as e:
+            messagebox.showwarning("Sobre", f"Não foi possível abrir a pasta de relatórios.\n\n{e}")
+
+    def _centralizar(self, parent):
+        self.update_idletasks()
+        x = parent.winfo_x() + (parent.winfo_width() - self.winfo_width()) // 2
+        y = parent.winfo_y() + (parent.winfo_height() - self.winfo_height()) // 2
+        self.geometry(f"+{x}+{y}")
+
+
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title(f"RAE Turbo {VERSAO_ATUAL}")
-        self.geometry("500x500")
+        self.geometry("500x560")
         try:
             self.iconbitmap(resource_path("assets/icone.ico"))
         except Exception:
@@ -179,6 +242,9 @@ class App(ctk.CTk):
 
         self.btn_cancelar = ctk.CTkButton(self, text="Cancelar", height=40, fg_color="#C0392B", hover_color="#A93226", state="disabled", command=self.cancelar)
         self.btn_cancelar.grid(row=10, column=0, padx=30, pady=5, sticky="ew")
+
+        self.btn_sobre = ctk.CTkButton(self, text="Sobre", height=35, fg_color="gray30", hover_color="gray25", command=self.abrir_sobre)
+        self.btn_sobre.grid(row=11, column=0, padx=30, pady=(12, 5), sticky="ew")
 
     def _criar_campo_pasta(self, label, var_name, row):
         ctk.CTkLabel(self, text=label).grid(row=row, column=0, sticky="w", padx=30)
@@ -264,6 +330,9 @@ class App(ctk.CTk):
             messagebox.showinfo("Cancelado", mensagem)
         else:
             messagebox.showwarning("Atenção", f"Processo finalizado com status inesperado: {status}")
+
+    def abrir_sobre(self):
+        DialogSobre(self)
 
     def cancelar(self):
         self.evento_cancelar.set()
