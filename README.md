@@ -2,7 +2,7 @@
 
 **RAE Turbo** é uma ferramenta de automação criada para otimizar a rotina de atendimento MEI, organizando PDFs de atendimentos e automatizando o preenchimento do RAE — Registro de Ação Empreendedora.
 
-> Versão deste pacote: `v1.2.6`  
+> Versão deste pacote: `v1.2.7`  
 > Última atualização da documentação: 05/05/2026
 
 ## Funcionalidades principais

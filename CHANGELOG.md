@@ -1,7 +1,7 @@
-## RAE Turbo v1.2.6
+## RAE Turbo v1.2.7
 
 ### Principais mudanças
-- Alinhamento da UI
+- Reajuste UI de configuração da unidadde
 
 ### Arquivos
 - `RAE_Turbo.exe`
