@@ -50,255 +50,85 @@ class DialogConfiguracoes(ctk.CTkToplevel):
         self.base_acoes = carregar_base_dados("base_dados_acoes.json")
         self._montar_ui(config_atual)
 
-def _montar_ui(self, config_atual):
-    pad = {"padx": 16, "pady": (0, 12)}
+    def _montar_ui(self, config_atual):
+        pad = {"padx": 16, "pady": (0, 12)}
+        ctk.CTkLabel(self, text="Configuração da Unidade", font=ctk.CTkFont(size=18, weight="bold")).pack(padx=20, pady=(20, 16))
 
-    ctk.CTkLabel(
-        self,
-        text="Configuração da Unidade",
-        font=ctk.CTkFont(size=18, weight="bold")
-    ).pack(padx=20, pady=(20, 16))
+        frame_canal = ctk.CTkFrame(self)
+        frame_canal.pack(fill="x", padx=20, pady=(0, 12))
+        ctk.CTkLabel(frame_canal, text="Canal e local de realização", font=ctk.CTkFont(size=13, weight="bold")).pack(anchor="w", padx=16, pady=(12, 8))
 
-    # =========================
-    # CANAL E LOCAL
-    # =========================
-    frame_canal = ctk.CTkFrame(self)
-    frame_canal.pack(fill="x", padx=20, pady=(0, 12))
+        ctk.CTkLabel(frame_canal, text="Canal:", anchor="w").pack(fill="x", padx=16)
+        self.entrada_canal = ctk.CTkEntry(frame_canal, height=35)
+        self.entrada_canal.pack(fill="x", **pad)
+        self.entrada_canal.insert(0, config_atual.get("canal", ""))
 
-    ctk.CTkLabel(
-        frame_canal,
-        text="Canal e local de realização",
-        font=ctk.CTkFont(size=13, weight="bold")
-    ).pack(anchor="w", padx=16, pady=(12, 8))
+        ctk.CTkLabel(frame_canal, text="Local de execução:", anchor="w").pack(fill="x", padx=16)
+        self.entrada_local = ctk.CTkEntry(frame_canal, height=35)
+        self.entrada_local.pack(fill="x", **pad)
+        self.entrada_local.insert(0, config_atual.get("local_execucao", ""))
 
-    ctk.CTkLabel(
-        frame_canal,
-        text="Canal:",
-        anchor="w"
-    ).pack(fill="x", padx=16)
+        frame_plano = ctk.CTkFrame(self)
+        frame_plano.pack(fill="x", padx=20, pady=(0, 4))
+        ctk.CTkLabel(frame_plano, text="Plano orçamentário", font=ctk.CTkFont(size=13, weight="bold")).pack(anchor="w", padx=16, pady=(12, 8))
 
-    self.entrada_canal = ctk.CTkEntry(frame_canal, height=35)
-    self.entrada_canal.pack(fill="x", **pad)
-    self.entrada_canal.insert(0, config_atual.get("canal", ""))
+        ctk.CTkLabel(frame_plano, text="Escritório Regional ou Unidade:", anchor="w").pack(fill="x", padx=16)
+        self.combo_unidade = ctk.CTkComboBox(frame_plano, values=list(MAPA_UNIDADES.keys()), height=35, command=self._ao_alterar_unidade, state="readonly")
+        self.combo_unidade.pack(fill="x", **pad)
 
-    ctk.CTkLabel(
-        frame_canal,
-        text="Local de execução:",
-        anchor="w"
-    ).pack(fill="x", padx=16)
+        ctk.CTkLabel(frame_plano, text="Projeto:", anchor="w").pack(fill="x", padx=16)
+        self.combo_projeto = ctk.CTkComboBox(frame_plano, values=["Selecione a unidade..."], height=35, command=self._ao_alterar_projeto, state="readonly")
+        self.combo_projeto.pack(fill="x", **pad)
 
-    self.entrada_local = ctk.CTkEntry(frame_canal, height=35)
-    self.entrada_local.pack(fill="x", **pad)
-    self.entrada_local.insert(0, config_atual.get("local_execucao", ""))
+        ctk.CTkLabel(frame_plano, text="Ação:", anchor="w").pack(fill="x", padx=16)
+        self.combo_acao = ctk.CTkComboBox(frame_plano, values=["Selecione o projeto..."], height=35, state="readonly")
+        self.combo_acao.pack(fill="x", **pad)
 
-    # =========================
-    # PLANO ORÇAMENTÁRIO
-    # =========================
-    frame_plano = ctk.CTkFrame(self)
-    frame_plano.pack(fill="x", padx=20, pady=(0, 4))
+        ctk.CTkLabel(frame_plano, text="Ano:", anchor="w").pack(fill="x", padx=16)
+        self.entrada_ano = ctk.CTkEntry(frame_plano, height=35)
+        self.entrada_ano.pack(fill="x", **pad)
+        self.entrada_ano.insert(0, config_atual.get("ano", "2026"))
 
-    ctk.CTkLabel(
-        frame_plano,
-        text="Plano orçamentário",
-        font=ctk.CTkFont(size=13, weight="bold")
-    ).pack(anchor="w", padx=16, pady=(12, 8))
+        if config_atual.get("unidade_nome"):
+            self.combo_unidade.set(config_atual["unidade_nome"])
+            self._ao_alterar_unidade(config_atual["unidade_nome"])
+            if config_atual.get("projeto"):
+                self.combo_projeto.set(config_atual["projeto"])
+                self._ao_alterar_projeto(config_atual["projeto"])
+                if config_atual.get("acao"):
+                    self.combo_acao.set(config_atual["acao"])
 
-    # Listas base para os filtros
-    self.valores_unidades = list(MAPA_UNIDADES.keys())
-    self.valores_projetos = []
-    self.valores_acoes = []
+        frame_btns = ctk.CTkFrame(self, fg_color="transparent")
+        frame_btns.pack(fill="x", padx=20, pady=(8, 20))
+        ctk.CTkButton(frame_btns, text="Cancelar", fg_color="gray40", command=self.destroy).pack(side="left", expand=True, padx=(0, 5))
+        ctk.CTkButton(frame_btns, text="Confirmar e Salvar", font=ctk.CTkFont(weight="bold"), command=self._confirmar).pack(side="left", expand=True, padx=(5, 0))
 
-    # Unidade pesquisável
-    self.pesquisa_unidade, self.combo_unidade = self._criar_combo_pesquisavel(
-        parent=frame_plano,
-        texto_label="Escritório Regional ou Unidade:",
-        valores=self.valores_unidades,
-        placeholder_pesquisa="Pesquisar unidade...",
-        placeholder_combo="Selecione a unidade...",
-        command=self._ao_alterar_unidade
-    )
+    def _ao_alterar_unidade(self, escolha):
+        id_er = MAPA_UNIDADES.get(escolha, "")
+        projetos_dict = self.base_projetos.get(f"ER_{id_er}", {})
+        lista_nomes = list(projetos_dict.keys())
+        if lista_nomes:
+            self.combo_projeto.configure(values=lista_nomes)
+            self.combo_projeto.set(lista_nomes[0])
+            self._ao_alterar_projeto(lista_nomes[0])
+        else:
+            self.combo_projeto.configure(values=["Nenhum projeto encontrado"])
+            self.combo_projeto.set("Nenhum projeto encontrado")
+            self.combo_acao.configure(values=["Nenhuma ação encontrada"])
+            self.combo_acao.set("Nenhuma ação encontrada")
 
-    # Projeto pesquisável
-    self.pesquisa_projeto, self.combo_projeto = self._criar_combo_pesquisavel(
-        parent=frame_plano,
-        texto_label="Projeto:",
-        valores=self.valores_projetos,
-        placeholder_pesquisa="Pesquisar projeto...",
-        placeholder_combo="Selecione a unidade...",
-        command=self._ao_alterar_projeto
-    )
-
-    # Ação pesquisável
-    self.pesquisa_acao, self.combo_acao = self._criar_combo_pesquisavel(
-        parent=frame_plano,
-        texto_label="Ação:",
-        valores=self.valores_acoes,
-        placeholder_pesquisa="Pesquisar ação...",
-        placeholder_combo="Selecione o projeto...",
-        command=None
-    )
-
-    # Ano
-    ctk.CTkLabel(
-        frame_plano,
-        text="Ano:",
-        anchor="w"
-    ).pack(fill="x", padx=16)
-
-    self.entrada_ano = ctk.CTkEntry(frame_plano, height=35)
-    self.entrada_ano.pack(fill="x", **pad)
-    self.entrada_ano.insert(0, config_atual.get("ano", "2026"))
-
-    # =========================
-    # CARREGAR CONFIGURAÇÃO ATUAL
-    # =========================
-    if config_atual.get("unidade_nome"):
-        unidade_salva = config_atual["unidade_nome"]
-
-        self.combo_unidade.set(unidade_salva)
-        self.pesquisa_unidade.delete(0, "end")
-        self.pesquisa_unidade.insert(0, unidade_salva)
-
-        self._ao_alterar_unidade(unidade_salva)
-
-        if config_atual.get("projeto"):
-            projeto_salvo = config_atual["projeto"]
-
-            self.combo_projeto.set(projeto_salvo)
-            self.pesquisa_projeto.delete(0, "end")
-            self.pesquisa_projeto.insert(0, projeto_salvo)
-
-            self._ao_alterar_projeto(projeto_salvo)
-
-            if config_atual.get("acao"):
-                acao_salva = config_atual["acao"]
-
-                self.combo_acao.set(acao_salva)
-                self.pesquisa_acao.delete(0, "end")
-                self.pesquisa_acao.insert(0, acao_salva)
-
-    # =========================
-    # BOTÕES
-    # =========================
-    frame_btns = ctk.CTkFrame(self, fg_color="transparent")
-    frame_btns.pack(fill="x", padx=20, pady=(8, 20))
-
-    ctk.CTkButton(
-        frame_btns,
-        text="Cancelar",
-        fg_color="gray40",
-        command=self.destroy
-    ).pack(side="left", expand=True, padx=(0, 5))
-
-    ctk.CTkButton(
-        frame_btns,
-        text="Confirmar e Salvar",
-        font=ctk.CTkFont(weight="bold"),
-        command=self._confirmar
-    ).pack(side="left", expand=True, padx=(5, 0))
-
-def _ao_alterar_unidade(self, unidade_nome):
-    if not unidade_nome or unidade_nome in ["Selecione a unidade...", "Nenhum resultado encontrado"]:
-        return
-
-    projetos_da_unidade = MAPA_UNIDADES.get(unidade_nome, {})
-
-    self.valores_projetos = list(projetos_da_unidade.keys())
-    self.valores_acoes = []
-
-    self.pesquisa_projeto.delete(0, "end")
-    self.combo_projeto.configure(
-        values=self._primeiras_opcoes(
-            self.valores_projetos,
-            "Nenhum projeto encontrado",
-            limite=5
-        )
-    )
-    self.combo_projeto.set("")
-
-    self.pesquisa_acao.delete(0, "end")
-    self.combo_acao.configure(values=["Selecione o projeto..."])
-    self.combo_acao.set("")
-
-
-def _ao_alterar_projeto(self, projeto_nome):
-    if not projeto_nome or projeto_nome in ["Selecione a unidade...", "Nenhum resultado encontrado"]:
-        return
-
-    unidade_nome = self.combo_unidade.get()
-
-    projetos_da_unidade = MAPA_UNIDADES.get(unidade_nome, {})
-    acoes_do_projeto = projetos_da_unidade.get(projeto_nome, {})
-
-    self.valores_acoes = list(acoes_do_projeto.keys())
-
-    self.pesquisa_acao.delete(0, "end")
-    self.combo_acao.configure(
-        values=self._primeiras_opcoes(
-            self.valores_acoes,
-            "Nenhuma ação encontrada",
-            limite=5
-        )
-    )
-    self.combo_acao.set("")
-
-def _primeiras_opcoes(self, valores, placeholder="Selecione...", limite=5):
-    if not valores:
-        return [placeholder]
-    return valores[:limite]
-
-
-def _filtrar_combo(self, entrada_pesquisa, combo, valores_originais, placeholder="Nenhum resultado encontrado", limite=5):
-    texto = entrada_pesquisa.get().strip().upper()
-
-    if not texto:
-        filtrados = valores_originais[:limite]
-    else:
-        filtrados = [
-            valor for valor in valores_originais
-            if texto in valor.upper()
-        ][:limite]
-
-    if not filtrados:
-        combo.configure(values=[placeholder])
-        combo.set("")
-        return
-
-    combo.configure(values=filtrados)
-
-
-def _criar_combo_pesquisavel(self, parent, texto_label, valores, placeholder_pesquisa, placeholder_combo, command=None):
-    ctk.CTkLabel(parent, text=texto_label, anchor="w").pack(fill="x", padx=16)
-
-    entrada_pesquisa = ctk.CTkEntry(
-        parent,
-        height=32,
-        placeholder_text=placeholder_pesquisa
-    )
-    entrada_pesquisa.pack(fill="x", padx=16, pady=(0, 6))
-
-    combo = ctk.CTkComboBox(
-        parent,
-        values=self._primeiras_opcoes(valores, placeholder_combo, limite=5),
-        height=35,
-        command=command,
-        state="readonly"
-    )
-    combo.pack(fill="x", padx=16, pady=(0, 12))
-
-    entrada_pesquisa.bind(
-        "<KeyRelease>",
-        lambda event: self._filtrar_combo(
-            entrada_pesquisa,
-            combo,
-            valores,
-            placeholder="Nenhum resultado encontrado",
-            limite=5
-        )
-    )
-
-    return entrada_pesquisa, combo
-
+    def _ao_alterar_projeto(self, escolha_projeto):
+        id_er = MAPA_UNIDADES.get(self.combo_unidade.get(), "")
+        projetos_dict = self.base_projetos.get(f"ER_{id_er}", {})
+        id_projeto = projetos_dict.get(escolha_projeto, "")
+        acoes_dict = self.base_acoes.get(id_projeto, {})
+        lista_acoes = list(acoes_dict.keys())
+        if lista_acoes:
+            self.combo_acao.configure(values=lista_acoes)
+            self.combo_acao.set(lista_acoes[0])
+        else:
+            self.combo_acao.configure(values=["Nenhuma ação encontrada"])
+            self.combo_acao.set("Nenhuma ação encontrada")
 
     def _centralizar(self, parent):
         self.update_idletasks()
