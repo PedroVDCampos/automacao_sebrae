@@ -55,6 +55,85 @@ def clicar_js(driver, elemento):
     time.sleep(0.3) # Micro-pausa para os seus olhos e para a página renderizar
     driver.execute_script("arguments[0].click();", elemento)
 
+
+
+def voltar_para_inicio_rae(driver, pausa: float = 2.0):
+    """Volta para a tela inicial/pesquisa do RAE sem reiniciar o Chrome."""
+    try:
+        driver.get(URL_RAE)
+        time.sleep(pausa)
+    except Exception as e:
+        logger.warning(f"Não foi possível voltar para a tela inicial do RAE: {e}")
+
+
+def _elemento_visivel_por_id(driver, elemento_id: str) -> bool:
+    try:
+        elemento = driver.find_element(By.ID, elemento_id)
+        return elemento.is_displayed()
+    except Exception:
+        return False
+
+
+def obter_status_semaforo(driver) -> str:
+    """
+    Lê o semáforo de vencimento/regularidade do cadastro do cliente no RAE.
+
+    Retornos esperados:
+    - verde
+    - amarelo
+    - vermelho
+    - indefinido
+    """
+    if _elemento_visivel_por_id(driver, "spred"):
+        return "vermelho"
+    if _elemento_visivel_por_id(driver, "spyellow"):
+        return "amarelo"
+    if _elemento_visivel_por_id(driver, "spgreen"):
+        return "verde"
+    return "indefinido"
+
+
+def obter_situacao_pessoa_juridica(driver) -> str:
+    """Lê a situação da pessoa jurídica no select IdSituacao."""
+    try:
+        select_situacao = Select(driver.find_element(By.ID, "IdSituacao"))
+        return select_situacao.first_selected_option.text.strip()
+    except Exception:
+        return "indefinida"
+
+
+def diagnosticar_cliente_antes_de_prosseguir(driver, cnpj: str) -> str | None:
+    """
+    Diagnostica condições conhecidas em que NÃO é necessário reiniciar o Chrome.
+
+    Retorna None quando o cliente parece apto para prosseguir.
+    Retorna uma string de status quando deve parar aquele atendimento.
+    """
+    cnpj_mascarado = mascarar_cnpj(cnpj)
+    semaforo = obter_status_semaforo(driver)
+    situacao = obter_situacao_pessoa_juridica(driver)
+    situacao_normalizada = situacao.strip().lower()
+
+    logger.info(
+        f"Diagnóstico do cliente {cnpj_mascarado}: "
+        f"semáforo={semaforo} | situação PJ={situacao}"
+    )
+
+    if semaforo == "vermelho":
+        logger.warning(f"Cliente {cnpj_mascarado} com semáforo vermelho no RAE.")
+        return "cadastro_pendente"
+
+    if semaforo == "amarelo":
+        logger.warning(f"Cliente {cnpj_mascarado} com semáforo amarelo no RAE.")
+        return "cadastro_desatualizado"
+
+    if situacao_normalizada and situacao_normalizada not in {"ativo", "indefinida"}:
+        logger.warning(f"Cliente {cnpj_mascarado} com situação jurídica inválida: {situacao}")
+        return "pessoa_juridica_inativa"
+
+    return None
+
+
 def registrar_no_rae(driver, dados):
     wait = WebDriverWait(driver, 15) 
     
@@ -84,29 +163,47 @@ def registrar_no_rae(driver, dados):
         campo_cnpj.send_keys(Keys.ENTER) 
         
         # Aguarda a tabela de resultados carregar
-        time.sleep(2) 
-        
-        if "Nenhum registro encontrado" in driver.page_source or "desatualizado" in driver.page_source.lower():
-            logger.warning(f"CNPJ {mascarar_cnpj(dados['cnpj'])} não encontrado ou desatualizado.")
-            return "nao_encontrado" 
+        time.sleep(2)
 
         # 2. EDIÇÃO (O LÁPIS)
+        # Se o lápis não aparecer, é erro conhecido do próprio cadastro/consulta.
+        # Não reinicia o Chrome: volta para o início e segue para o próximo CNPJ.
         try:
-            lapis = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "i.fa-pencil")))
+            lapis = WebDriverWait(driver, 6).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "i.fa-pencil"))
+            )
             clicar_js(driver, lapis)
-        except:
-            return False
+        except TimeoutException:
+            logger.warning(f"CNPJ {mascarar_cnpj(dados['cnpj'])} não encontrado no RAE ou sem resultado clicável.")
+            voltar_para_inicio_rae(driver)
+            return "nao_encontrado"
 
         time.sleep(2) # Aguarda a tela de edição abrir completamente
+
+        # Diagnóstico inteligente do cadastro.
+        # Semáforo vermelho/amarelo ou PJ inativa não exigem restart do navegador.
+        diagnostico = diagnosticar_cliente_antes_de_prosseguir(driver, dados['cnpj'])
+        if diagnostico:
+            voltar_para_inicio_rae(driver)
+            return diagnostico
         
         # 3. PROSSEGUIR
-        btn_prosseguir = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'PROSSEGUIR COM ATENDIMENTO')]")))
-        clicar_js(driver, btn_prosseguir)
-        
-        time.sleep(1.5)
-        
-        btn_sim = wait.until(EC.presence_of_element_located((By.ID, "salvarDados")))
-        clicar_js(driver, btn_sim)
+        # Se cliente parece válido (semáforo verde/PJ ativa) e mesmo assim não prossegue,
+        # aí sim retornamos "travamento" para o orquestrador reiniciar o Chrome.
+        try:
+            btn_prosseguir = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'PROSSEGUIR COM ATENDIMENTO')]")))
+            clicar_js(driver, btn_prosseguir)
+            
+            time.sleep(1.5)
+            
+            btn_sim = wait.until(EC.presence_of_element_located((By.ID, "salvarDados")))
+            clicar_js(driver, btn_sim)
+        except Exception as e:
+            logger.warning(
+                f"Cliente {mascarar_cnpj(dados['cnpj'])} parece válido, "
+                f"mas não foi possível prosseguir com o atendimento: {e}"
+            )
+            return "travamento"
         
         # 4. PESSOA FÍSICA
         time.sleep(3) # Transição de modal crítica
@@ -120,8 +217,7 @@ def registrar_no_rae(driver, dados):
             
         except Exception as e:
             logger.error(f"Erro ao selecionar PF para CNPJ {mascarar_cnpj(dados['cnpj'])}: {e}")
-            driver.refresh()
-            return False
+            return "travamento"
 
         # 5. PREENCHIMENTO DO ATENDIMENTO (FINAL)
         time.sleep(3) # Espera a tela pesada final carregar
@@ -203,7 +299,8 @@ def registrar_no_rae(driver, dados):
 
         if opcao_encontrada is None:
             logger.error(f"Serviço exato não encontrado no RAE: {servico_exato}")
-            return False
+            voltar_para_inicio_rae(driver)
+            return "servico_nao_encontrado"
 
         driver.execute_script(
             "arguments[0].selected = true;"
@@ -315,6 +412,5 @@ def registrar_no_rae(driver, dados):
     except Exception as e:
         logger.error(f"Erro ao processar o CNPJ {mascarar_cnpj(dados.get('cnpj', ''))}. Motivo: {e}")
         logger.error(traceback.format_exc()) # Grava a linha exata do erro no log
-        driver.get(URL_RAE) 
-        time.sleep(3)
-        return False
+        voltar_para_inicio_rae(driver, pausa=3)
+        return "travamento"

@@ -92,6 +92,67 @@ def _registrar_contador(resumo: dict, chave: str, incremento: int = 1) -> None:
     resumo[chave] = resumo.get(chave, 0) + incremento
 
 
+
+
+def _registrar_erro_conhecido_rae(
+    sucesso: str,
+    cnpj_mascarado: str,
+    resumo: dict,
+    cnpjs_com_erro: list,
+) -> tuple[str, str]:
+    """
+    Registra erros conhecidos do RAE que NÃO exigem reinício do Chrome.
+
+    Retorna:
+    - motivo_erro_pdf: nome da pasta de erro
+    - motivo_relatorio: texto amigável para o relatório
+    """
+    mapa_erros = {
+        "nao_encontrado": (
+            "CNPJ_Nao_Encontrado",
+            "Não encontrado no RAE",
+            "cnpjs_nao_encontrados",
+            f"{cnpj_mascarado} (Não Encontrado)",
+        ),
+        "cadastro_pendente": (
+            "Cadastro_Pendente_RAE",
+            "Cadastro com pendência no RAE / semáforo vermelho",
+            "cadastros_pendentes",
+            f"{cnpj_mascarado} (Cadastro Pendente)",
+        ),
+        "cadastro_desatualizado": (
+            "Cadastro_Desatualizado_RAE",
+            "Cadastro desatualizado ou com semáforo amarelo no RAE",
+            "cadastros_desatualizados",
+            f"{cnpj_mascarado} (Cadastro Desatualizado)",
+        ),
+        "pessoa_juridica_inativa": (
+            "Pessoa_Juridica_Inativa",
+            "Pessoa jurídica não ativa no RAE",
+            "pessoas_juridicas_inativas",
+            f"{cnpj_mascarado} (PJ Inativa)",
+        ),
+        "servico_nao_encontrado": (
+            "Servico_Nao_Encontrado_RAE",
+            "Serviço exato não encontrado no RAE",
+            "servicos_nao_encontrados",
+            f"{cnpj_mascarado} (Serviço Não Encontrado)",
+        ),
+    }
+
+    motivo_erro_pdf, motivo_relatorio, contador, texto_lista = mapa_erros.get(
+        sucesso,
+        ("Erro_RAE", f"Erro conhecido no RAE: {sucesso}", "erros_conhecidos_rae", f"{cnpj_mascarado} ({sucesso})"),
+    )
+
+    _registrar_contador(resumo, contador)
+    resumo['erros'].append({'cnpj': cnpj_mascarado, 'motivo': motivo_relatorio})
+    cnpjs_com_erro.append(texto_lista)
+    logger.warning(f"⚠️ Atendimento não lançado: {motivo_relatorio} | CNPJ {cnpj_mascarado}")
+
+    return motivo_erro_pdf, motivo_relatorio
+
+
 def _mover_para_pasta_de_erro(
     caminho_pdf: str,
     pasta_origem: str,
@@ -338,17 +399,25 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
             resumo['raes_lancados'] += 1
             memoria_atendimentos.add(assinatura_atendimento)
             registro_confirmado = True
-            
-        elif sucesso == "nao_encontrado":
-            # CNPJ não existe no sistema do Sebrae. Não precisa reiniciar o navegador.
-            resumo['cnpjs_nao_encontrados'] += 1
-            resumo['erros'].append({'cnpj': cnpj_mascarado, 'motivo': 'Não encontrado no RAE'})
-            cnpjs_com_erro.append(f"{cnpj_mascarado} (Não Encontrado)")
-            motivo_erro_pdf = "CNPJ_Nao_Encontrado"
-            
+
+        elif sucesso in {
+            "nao_encontrado",
+            "cadastro_pendente",
+            "cadastro_desatualizado",
+            "pessoa_juridica_inativa",
+            "servico_nao_encontrado",
+        }:
+            # Erros conhecidos: não reinicia o Chrome. O próprio automacao_web.py já voltou para a tela inicial.
+            motivo_erro_pdf, _ = _registrar_erro_conhecido_rae(
+                sucesso,
+                cnpj_mascarado,
+                resumo,
+                cnpjs_com_erro,
+            )
+
         else:
-            # 🛑 FALHA CRÔNICA: Se retornou False, o botão prosseguir ou o site travou.
-            logger.warning(f"⚠️ Travamento detectado no CNPJ {cnpj_mascarado}. Iniciando Protocolo de Segurança (Restart)...")
+            # 🛑 TRAVAMENTO REAL: só reinicia quando cliente parece válido, mas o RAE não deixa prosseguir.
+            logger.warning(f"⚠️ Travamento real detectado no CNPJ {cnpj_mascarado}. Iniciando Protocolo de Segurança (Restart)...")
             
             # Dispara Alarme Sonoro de Alerta
             for _ in range(4):
@@ -399,6 +468,19 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                 resumo['raes_lancados'] += 1
                 memoria_atendimentos.add(assinatura_atendimento)
                 registro_confirmado = True
+            elif sucesso_retry in {
+                "nao_encontrado",
+                "cadastro_pendente",
+                "cadastro_desatualizado",
+                "pessoa_juridica_inativa",
+                "servico_nao_encontrado",
+            }:
+                motivo_erro_pdf, _ = _registrar_erro_conhecido_rae(
+                    sucesso_retry,
+                    cnpj_mascarado,
+                    resumo,
+                    cnpjs_com_erro,
+                )
             else:
                 logger.error(f"❌ O CNPJ {cnpj_mascarado} falhou definitivamente.")
                 resumo['falhas_definitivas'] += 1

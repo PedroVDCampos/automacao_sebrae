@@ -5,6 +5,7 @@ import time
 
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
+from datetime import datetime
 
 from core.orquestrador import processar_tudo, verificar_compatibilidade_chrome
 from core.automacao_web import MAPA_UNIDADES, carregar_base_dados
@@ -236,7 +237,7 @@ class App(ctk.CTk):
 
         ctk.CTkLabel(self, text="Processar a partir de (DD/MM/AAAA):").grid(row=6, column=0, sticky="w", padx=30)
         self.entrada_data = ctk.CTkEntry(self, width=150)
-        self.entrada_data.insert(0, "01/01/2026")
+        self.entrada_data.insert(0, datetime.now().strftime("%d/%m/%Y"))
         self.entrada_data.grid(row=7, column=0, sticky="w", padx=30, pady=(0, 16))
 
         self.label_status = ctk.CTkLabel(self, text="Pronto para iniciar.", text_color="gray80")
