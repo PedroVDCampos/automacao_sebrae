@@ -92,6 +92,110 @@ def _registrar_contador(resumo: dict, chave: str, incremento: int = 1) -> None:
     resumo[chave] = resumo.get(chave, 0) + incremento
 
 
+def _normalizar_resultado_rae(resultado) -> dict:
+    """
+    Aceita tanto o formato novo de retorno do automacao_web.py quanto
+    os retornos antigos (True, False, "nao_encontrado", "travamento" etc.).
+
+    Formato novo esperado:
+    {
+        "sucesso": bool,
+        "status": str,
+        "tempo_atendimento_segundos": float | None
+    }
+    """
+    if isinstance(resultado, dict):
+        status = resultado.get("status")
+        sucesso = bool(resultado.get("sucesso") is True or status == "sucesso")
+        return {
+            "sucesso": sucesso,
+            "status": status or ("sucesso" if sucesso else "travamento"),
+            "tempo_atendimento_segundos": resultado.get("tempo_atendimento_segundos"),
+        }
+
+    if resultado is True:
+        return {"sucesso": True, "status": "sucesso", "tempo_atendimento_segundos": None}
+
+    if isinstance(resultado, str):
+        return {"sucesso": False, "status": resultado, "tempo_atendimento_segundos": None}
+
+    return {"sucesso": False, "status": "travamento", "tempo_atendimento_segundos": None}
+
+
+def _registrar_tempo_real_atendimento(resumo: dict, resultado_rae: dict) -> None:
+    """
+    Registra somente tempos de atendimentos realmente finalizados no RAE.
+
+    A média real descarta:
+    - CNPJ não encontrado;
+    - cadastro pendente/desatualizado;
+    - pessoa jurídica inativa;
+    - serviço não encontrado;
+    - travamentos/falhas definitivas;
+    - tempo parado em login/restart.
+    """
+    if resultado_rae.get("sucesso") is not True:
+        return
+
+    tempo = resultado_rae.get("tempo_atendimento_segundos")
+
+    if tempo is None:
+        return
+
+    try:
+        tempo = float(tempo)
+    except (TypeError, ValueError):
+        return
+
+    if tempo <= 0:
+        return
+
+    tempos = resumo.setdefault("tempos_atendimentos_segundos", [])
+    tempos.append(tempo)
+    resumo["atendimentos_cronometrados"] = len(tempos)
+    resumo["tempo_total_real_atendimentos_segundos"] = sum(tempos)
+    resumo["tempo_medio_real_atendimento_segundos"] = sum(tempos) / len(tempos)
+
+
+def _atualizar_metricas_tempo_real(resumo: dict) -> None:
+    """Garante que as métricas de tempo real estejam calculadas antes de finalizar o resumo."""
+    tempos = resumo.get("tempos_atendimentos_segundos", [])
+
+    tempos_validos = []
+    for tempo in tempos:
+        try:
+            tempo = float(tempo)
+            if tempo > 0:
+                tempos_validos.append(tempo)
+        except (TypeError, ValueError):
+            continue
+
+    resumo["tempos_atendimentos_segundos"] = tempos_validos
+    resumo["atendimentos_cronometrados"] = len(tempos_validos)
+    resumo["tempo_total_real_atendimentos_segundos"] = sum(tempos_validos)
+
+    if tempos_validos:
+        resumo["tempo_medio_real_atendimento_segundos"] = sum(tempos_validos) / len(tempos_validos)
+        resumo["menor_tempo_real_atendimento_segundos"] = min(tempos_validos)
+        resumo["maior_tempo_real_atendimento_segundos"] = max(tempos_validos)
+    else:
+        resumo["tempo_medio_real_atendimento_segundos"] = 0
+        resumo["menor_tempo_real_atendimento_segundos"] = 0
+        resumo["maior_tempo_real_atendimento_segundos"] = 0
+
+
+def _finalizar_resumo_com_metricas(resumo: dict, status: str) -> dict:
+    """
+    Finaliza o resumo preservando as métricas de tempo real.
+    Chamamos antes e depois para evitar que uma versão antiga do relatório
+    deixe de carregar os campos novos.
+    """
+    _atualizar_metricas_tempo_real(resumo)
+    resumo_final = finalizar_resumo_execucao(resumo, status)
+    _atualizar_metricas_tempo_real(resumo_final)
+    return resumo_final
+
+
 
 
 def _registrar_erro_conhecido_rae(
@@ -286,6 +390,10 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
     arquivos_movidos = 0
     cnpjs_com_erro = []
     resumo = novo_resumo_execucao(pasta_origem, pasta_destino_raiz, data_corte_str)
+    resumo.setdefault("tempos_atendimentos_segundos", [])
+    resumo.setdefault("atendimentos_cronometrados", 0)
+    resumo.setdefault("tempo_total_real_atendimentos_segundos", 0)
+    resumo.setdefault("tempo_medio_real_atendimento_segundos", 0)
     logger.info("--- INÍCIO DE NOVA EXECUÇÃO ---")
     
     # 🧠 MEMÓRIA DE CURTO PRAZO (Evita o problema da Onipresença)
@@ -390,17 +498,20 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
         }
 
         # 🚀 LANÇAMENTO NO RAE
-        sucesso = registrar_no_rae(driver, dados_atendimento)
+        resultado_rae = _normalizar_resultado_rae(registrar_no_rae(driver, dados_atendimento))
+        status_rae = resultado_rae.get("status")
+
         registro_confirmado = False
         motivo_erro_pdf = ""
         cnpj_mascarado = mascarar_cnpj(cnpj_cliente)
-        
-        if sucesso == True:
+
+        if resultado_rae.get("sucesso") is True:
             resumo['raes_lancados'] += 1
+            _registrar_tempo_real_atendimento(resumo, resultado_rae)
             memoria_atendimentos.add(assinatura_atendimento)
             registro_confirmado = True
 
-        elif sucesso in {
+        elif status_rae in {
             "nao_encontrado",
             "cadastro_pendente",
             "cadastro_desatualizado",
@@ -409,7 +520,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
         }:
             # Erros conhecidos: não reinicia o Chrome. O próprio automacao_web.py já voltou para a tela inicial.
             motivo_erro_pdf, _ = _registrar_erro_conhecido_rae(
-                sucesso,
+                status_rae,
                 cnpj_mascarado,
                 resumo,
                 cnpjs_com_erro,
@@ -418,12 +529,12 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
         else:
             # 🛑 TRAVAMENTO REAL: só reinicia quando cliente parece válido, mas o RAE não deixa prosseguir.
             logger.warning(f"⚠️ Travamento real detectado no CNPJ {cnpj_mascarado}. Iniciando Protocolo de Segurança (Restart)...")
-            
+
             # Dispara Alarme Sonoro de Alerta
             for _ in range(4):
                 winsound.Beep(1500, 400)
                 time.sleep(0.1)
-            
+
             try:
                 driver.quit()
             except Exception:
@@ -445,7 +556,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                     "Erro_Critico_Reinicio_Navegador",
                     resumo,
                 )
-                resumo_final = finalizar_resumo_execucao(resumo, "erro_fatal")
+                resumo_final = _finalizar_resumo_com_metricas(resumo, "erro_fatal")
                 return {"status": "erro_fatal", "msg": f"Erro crítico ao tentar reiniciar o navegador: {e}", "resumo": resumo_final}
 
             # Pausa Nativa com alerta por cima de todas as janelas
@@ -458,17 +569,19 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                 "⚠️ Reinício de Segurança (RAE Turbo)",
                 0x30 | 0x40000
             )
-            
+
             # Segunda Tentativa!
             logger.info(f"🔄 Tentativa de resgate do CNPJ {cnpj_mascarado}...")
-            sucesso_retry = registrar_no_rae(driver, dados_atendimento)
-            
-            if sucesso_retry == True:
+            resultado_retry = _normalizar_resultado_rae(registrar_no_rae(driver, dados_atendimento))
+            status_retry = resultado_retry.get("status")
+
+            if resultado_retry.get("sucesso") is True:
                 logger.info("✅ Resgate bem-sucedido após reinício!")
                 resumo['raes_lancados'] += 1
+                _registrar_tempo_real_atendimento(resumo, resultado_retry)
                 memoria_atendimentos.add(assinatura_atendimento)
                 registro_confirmado = True
-            elif sucesso_retry in {
+            elif status_retry in {
                 "nao_encontrado",
                 "cadastro_pendente",
                 "cadastro_desatualizado",
@@ -476,7 +589,7 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                 "servico_nao_encontrado",
             }:
                 motivo_erro_pdf, _ = _registrar_erro_conhecido_rae(
-                    sucesso_retry,
+                    status_retry,
                     cnpj_mascarado,
                     resumo,
                     cnpjs_com_erro,
@@ -516,8 +629,8 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
         pass
 
     if evento_cancelar.is_set():
-        resumo_final = finalizar_resumo_execucao(resumo, "cancelado")
+        resumo_final = _finalizar_resumo_com_metricas(resumo, "cancelado")
         return {"status": "cancelado", "resumo": resumo_final}
 
-    resumo_final = finalizar_resumo_execucao(resumo, "sucesso")
+    resumo_final = _finalizar_resumo_com_metricas(resumo, "sucesso")
     return {"status": "sucesso", "arquivos": arquivos_movidos, "erros": list(set(cnpjs_com_erro)), "resumo": resumo_final}

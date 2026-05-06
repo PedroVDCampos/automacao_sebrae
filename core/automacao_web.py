@@ -134,8 +134,26 @@ def diagnosticar_cliente_antes_de_prosseguir(driver, cnpj: str) -> str | None:
     return None
 
 
+
+def _resultado_rae(status: str, sucesso: bool = False, tempo_atendimento_segundos: float | None = None) -> dict:
+    """
+    Padroniza o retorno da automação do RAE.
+
+    O tempo_atendimento_segundos só deve ser preenchido quando o atendimento for
+    realmente finalizado com sucesso. Ele mede o intervalo entre o início da
+    digitação do CNPJ e o clique em "Finalizar atendimento".
+    """
+    return {
+        "sucesso": bool(sucesso),
+        "status": status,
+        "tempo_atendimento_segundos": tempo_atendimento_segundos if sucesso else None,
+    }
+
+
 def registrar_no_rae(driver, dados):
-    wait = WebDriverWait(driver, 15) 
+    wait = WebDriverWait(driver, 15)
+    inicio_cronometro_atendimento = None
+    tempo_lancamento_segundos = None
     
     # 🧠 LENDO OS DADOS DINÂMICOS
     base_projetos = carregar_base_dados("base_dados_projetos.json")
@@ -157,6 +175,11 @@ def registrar_no_rae(driver, dados):
         time.sleep(1.5) # Pausa para a aba renderizar
 
         campo_cnpj = wait.until(EC.visibility_of_element_located((By.ID, "CNPJ")))
+
+        # Cronômetro real do atendimento:
+        # começa no momento em que o robô inicia a digitação do CNPJ.
+        inicio_cronometro_atendimento = time.perf_counter()
+
         campo_cnpj.clear()
         campo_cnpj.send_keys(dados['cnpj'])
         time.sleep(0.5) 
@@ -176,7 +199,7 @@ def registrar_no_rae(driver, dados):
         except TimeoutException:
             logger.warning(f"CNPJ {mascarar_cnpj(dados['cnpj'])} não encontrado no RAE ou sem resultado clicável.")
             voltar_para_inicio_rae(driver)
-            return "nao_encontrado"
+            return _resultado_rae("nao_encontrado")
 
         time.sleep(2) # Aguarda a tela de edição abrir completamente
 
@@ -185,7 +208,7 @@ def registrar_no_rae(driver, dados):
         diagnostico = diagnosticar_cliente_antes_de_prosseguir(driver, dados['cnpj'])
         if diagnostico:
             voltar_para_inicio_rae(driver)
-            return diagnostico
+            return _resultado_rae(diagnostico)
         
         # 3. PROSSEGUIR
         # Se cliente parece válido (semáforo verde/PJ ativa) e mesmo assim não prossegue,
@@ -203,7 +226,7 @@ def registrar_no_rae(driver, dados):
                 f"Cliente {mascarar_cnpj(dados['cnpj'])} parece válido, "
                 f"mas não foi possível prosseguir com o atendimento: {e}"
             )
-            return "travamento"
+            return _resultado_rae("travamento")
         
         # 4. PESSOA FÍSICA
         time.sleep(3) # Transição de modal crítica
@@ -217,7 +240,7 @@ def registrar_no_rae(driver, dados):
             
         except Exception as e:
             logger.error(f"Erro ao selecionar PF para CNPJ {mascarar_cnpj(dados['cnpj'])}: {e}")
-            return "travamento"
+            return _resultado_rae("travamento")
 
         # 5. PREENCHIMENTO DO ATENDIMENTO (FINAL)
         time.sleep(3) # Espera a tela pesada final carregar
@@ -300,7 +323,7 @@ def registrar_no_rae(driver, dados):
         if opcao_encontrada is None:
             logger.error(f"Serviço exato não encontrado no RAE: {servico_exato}")
             voltar_para_inicio_rae(driver)
-            return "servico_nao_encontrado"
+            return _resultado_rae("servico_nao_encontrado")
 
         driver.execute_script(
             "arguments[0].selected = true;"
@@ -399,6 +422,11 @@ def registrar_no_rae(driver, dados):
         btn_finalizar = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'finalizar', 'FINALIZAR'), 'FINALIZAR')]")))
         clicar_js(driver, btn_finalizar)
 
+        # Cronômetro real do atendimento:
+        # termina no clique em "Finalizar atendimento".
+        if inicio_cronometro_atendimento is not None:
+            tempo_lancamento_segundos = time.perf_counter() - inicio_cronometro_atendimento
+
         time.sleep(3)
         try:
             btn_voltar = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'voltar', 'VOLTAR'), 'VOLTAR') or @title='Voltar']")))
@@ -407,10 +435,10 @@ def registrar_no_rae(driver, dados):
             driver.get(URL_RAE)
             
         logger.info(f"CNPJ {mascarar_cnpj(dados['cnpj'])} registrado com sucesso.")
-        return True
+        return _resultado_rae("sucesso", True, tempo_lancamento_segundos)
         
     except Exception as e:
         logger.error(f"Erro ao processar o CNPJ {mascarar_cnpj(dados.get('cnpj', ''))}. Motivo: {e}")
         logger.error(traceback.format_exc()) # Grava a linha exata do erro no log
         voltar_para_inicio_rae(driver, pausa=3)
-        return "travamento"
+        return _resultado_rae("travamento")

@@ -2,7 +2,7 @@
 
 **RAE Turbo** é uma ferramenta de automação criada para otimizar a rotina de atendimento MEI, organizando PDFs de atendimentos e automatizando o preenchimento do RAE — Registro de Ação Empreendedora.
 
-> Versão deste pacote: `v1.2.7`  
+> Versão deste pacote: `v1.2.8`  
 > Última atualização da documentação: 05/05/2026
 
 ## Funcionalidades principais
@@ -28,8 +28,8 @@ python main.pyw
 
 ```bash
 git add .
-git commit -m "prepara versão v1.1.7"
-git tag v1.1.7
+git commit -m "prepara versão vx.x.x"
+git tag vx.x.x
 git push
-git push origin v1.1.7
+git push origin vx.x.x
 ```
