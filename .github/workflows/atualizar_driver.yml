@@ -1,0 +1,111 @@
+name: Atualizar ChromeDriver Automaticamente
+
+on:
+  schedule:
+    - cron: '0 6 * * *' 
+  workflow_dispatch:        
+
+jobs:
+  checar-e-atualizar:
+    runs-on: windows-latest
+
+    permissions:
+      contents: write       
+
+    steps:
+
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Ler versão atual do ChromeDriver
+        id: driver_atual
+        shell: pwsh
+        run: |
+          $saida  = & "drivers\chromedriver.exe" --version
+          $versao = ($saida -replace "ChromeDriver ", "") -replace " .*", ""
+          $major  = $versao.Split(".")[0]
+
+          echo "versao=$versao" >> $env:GITHUB_OUTPUT
+          echo "major=$major"   >> $env:GITHUB_OUTPUT
+          Write-Host "ChromeDriver atual: $versao (major: $major)"
+
+      - name: Buscar versão estável mais recente do Chrome
+        id: chrome_novo
+        shell: pwsh
+        run: |
+          $api     = "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json"
+          $json    = Invoke-RestMethod $api
+          $stable  = $json.channels.Stable
+          $versao  = $stable.version
+          $major   = $versao.Split(".")[0]
+
+          # URL do chromedriver para Windows 64-bit
+          $url = ($stable.downloads.chromedriver | Where-Object { $_.platform -eq "win64" }).url
+
+          echo "versao=$versao" >> $env:GITHUB_OUTPUT
+          echo "major=$major"   >> $env:GITHUB_OUTPUT
+          echo "url=$url"       >> $env:GITHUB_OUTPUT
+          Write-Host "Chrome estável: $versao (major: $major)"
+          Write-Host "URL download: $url"
+
+      - name: Verificar se atualização é necessária
+        id: decisao
+        shell: pwsh
+        run: |
+          $atual = "${{ steps.driver_atual.outputs.major }}"
+          $novo  = "${{ steps.chrome_novo.outputs.major }}"
+
+          if ($atual -ne $novo) {
+            Write-Host "✅ Atualização necessária: $atual → $novo"
+            echo "atualizar=true" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "✔️ ChromeDriver já está atualizado (major $atual). Nada a fazer."
+            echo "atualizar=false" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Baixar novo ChromeDriver
+        if: steps.decisao.outputs.atualizar == 'true'
+        shell: pwsh
+        run: |
+          $url = "${{ steps.chrome_novo.outputs.url }}"
+          Write-Host "Baixando ChromeDriver de: $url"
+
+          Invoke-WebRequest -Uri $url -OutFile "chromedriver_novo.zip"
+          Expand-Archive -Path "chromedriver_novo.zip" -DestinationPath "chromedriver_temp" -Force
+          Copy-Item "chromedriver_temp\chromedriver-win64\chromedriver.exe" `
+                    -Destination "drivers\chromedriver.exe" -Force
+
+          Write-Host "ChromeDriver atualizado com sucesso."
+
+      - name: Bump de versão e publicação da tag
+        if: steps.decisao.outputs.atualizar == 'true'
+        shell: pwsh
+        run: |
+          # Lê a versão atual do version.py
+          $conteudo = Get-Content "version.py" -Raw
+          $match = [regex]::Match($conteudo, '"(\d+)\.(\d+)\.(\d+)"')
+
+          $v_major = $match.Groups[1].Value
+          $v_minor = $match.Groups[2].Value
+          $v_patch = [int]$match.Groups[3].Value + 1
+          $nova_versao = "$v_major.$v_minor.$v_patch"
+
+          Write-Host "Nova versão do programa: $nova_versao"
+
+          # Atualiza version.py com a nova versão
+          $novo_conteudo = $conteudo -replace '"(\d+\.\d+\.\d+)"', """$nova_versao"""
+          Set-Content "version.py" $novo_conteudo -NoNewline
+
+          # Configura o Git para o commit
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Commita o ChromeDriver novo e o version.py atualizado
+          git add "drivers\chromedriver.exe" "version.py"
+          git commit -m "chore: atualiza ChromeDriver ${{ steps.driver_atual.outputs.versao }} → ${{ steps.chrome_novo.outputs.versao }}"
+
+          # Cria a tag — isso dispara o build.yml automaticamente!
+          git tag "v$nova_versao"
+          git push origin HEAD --tags
+
+          Write-Host "Tag v$nova_versao criada. O build.yml irá compilar e publicar o .exe."
