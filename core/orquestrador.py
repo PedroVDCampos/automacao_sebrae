@@ -14,7 +14,7 @@ from utils.logger import configurar_logger
 from utils.paths import resource_path
 from utils.privacy import mascarar_cnpj, nome_seguro_para_pasta
 from utils.relatorio_execucao import novo_resumo_execucao, finalizar_resumo_execucao
-from core.extrator_pdf import ler_pdf_padrao, ler_boleto_parcelamento
+from core.extrator_pdf import ler_pdf_padrao, ler_boleto_parcelamento, ler_ccmei
 from core.automacao_web import registrar_no_rae, URL_RAE
 
 logger = configurar_logger()
@@ -422,13 +422,40 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
         palavra_chave = ""
         servico_exato = ""
 
-        if nome_arquivo.startswith("CCMEI-"):
-            servico_nome = "Formalizacao"
-            palavra_chave = "formalização"
-            servico_exato = "MEI - Formalização do MEI"
-            nome_cliente, cnpj_cliente = ler_pdf_padrao(caminho_completo, "NOME CIVIL")
-        elif nome_arquivo.startswith("CCMEI"):
-            servico_nome = "Alteracao"
+        if nome_arquivo.startswith("CCMEI"):
+            nome_cliente, cnpj_cliente, data_abertura = ler_ccmei(caminho_completo)
+
+            if data_abertura:
+                # CCMEI de formalização e alteração têm o mesmo padrão de nome.
+                # Regra:
+                # - Data de abertura igual à data do arquivo/download: Formalização;
+                # - Data de abertura diferente da data do arquivo/download: Alteração.
+                if data_abertura.date() == data_formatada.date():
+                    servico_nome = "Formalizacao"
+                    palavra_chave = "formalização"
+                    servico_exato = "MEI - Formalização do MEI"
+                    logger.info(
+                        f"📄 CCMEI classificado como Formalização | "
+                        f"Data abertura: {data_abertura.strftime('%d/%m/%Y')} | "
+                        f"Data arquivo: {data_formatada.strftime('%d/%m/%Y')}"
+                    )
+                else:
+                    servico_nome = "Alteracao"
+                    palavra_chave = "alteração"
+                    servico_exato = "MEI - Alteração do MEI"
+                    logger.info(
+                        f"📄 CCMEI classificado como Alteração | "
+                        f"Data abertura: {data_abertura.strftime('%d/%m/%Y')} | "
+                        f"Data arquivo: {data_formatada.strftime('%d/%m/%Y')}"
+                    )
+            else:
+                # Sem data de abertura não dá para diferenciar formalização de alteração com segurança.
+                servico_nome = "CCMEI_Indefinido"
+                logger.warning(
+                    f"⚠️ CCMEI sem Data de Abertura identificável. "
+                    f"Arquivo será enviado para conferência: {nome_arquivo}"
+                )
+
         elif nome_arquivo.startswith("DASNSIMEI-"):
             servico_nome = "Declaracao"
             palavra_chave = "dasn"
@@ -454,16 +481,34 @@ def processar_tudo(pasta_origem, pasta_destino_raiz, data_corte_str, evento_canc
                 palavra_chave = "baixa"
                 servico_exato = "Baixa de Inscrição no CNPJ"
 
-        if not (servico_nome and cnpj_cliente):
-            if servico_nome and not cnpj_cliente:
+        if not (servico_nome and cnpj_cliente and palavra_chave and servico_exato):
+            if servico_nome:
                 resumo['pdfs_sem_dados'] += 1
-                logger.warning(f"⚠️ PDF sem dados suficientes para processamento: {nome_arquivo}")
+
+                motivos_faltantes = []
+                if not cnpj_cliente:
+                    motivos_faltantes.append("CNPJ")
+                if not palavra_chave:
+                    motivos_faltantes.append("palavra-chave")
+                if not servico_exato:
+                    motivos_faltantes.append("serviço exato")
+
+                detalhe_faltantes = ", ".join(motivos_faltantes) if motivos_faltantes else "dados obrigatórios"
+                logger.warning(
+                    f"⚠️ PDF sem dados suficientes para processamento: {nome_arquivo} "
+                    f"| Faltando: {detalhe_faltantes}"
+                )
+
+                motivo_erro = "Sem_Dados_Suficientes"
+                if servico_nome == "CCMEI_Indefinido":
+                    motivo_erro = "CCMEI_Data_Abertura_Nao_Encontrada"
+
                 _mover_para_pasta_de_erro(
                     caminho_completo,
                     pasta_origem,
                     servico_nome,
                     nome_arquivo,
-                    "Sem_Dados_Suficientes",
+                    motivo_erro,
                     resumo,
                 )
             else:
