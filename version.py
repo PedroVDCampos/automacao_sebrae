@@ -1,1 +1,0 @@
-VERSAO_ATUAL = "v1.3.4"

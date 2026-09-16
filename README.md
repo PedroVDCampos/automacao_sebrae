@@ -1,35 +1,24 @@
 # RAE Turbo
 
-**RAE Turbo** é uma ferramenta de automação criada para otimizar a rotina de atendimento MEI, organizando PDFs de atendimentos e automatizando o preenchimento do RAE — Registro de Ação Empreendedora.
+## Organizador automatizado de documentos de atendimento
 
-> Versão deste pacote: `v1.2.8`  
-> Última atualização da documentação: 05/05/2026
+O RAE Turbo identifica documentos PDF, extrai as informações necessárias e organiza os arquivos automaticamente por ano, mês, tipo de atendimento e cliente.
 
-## Funcionalidades principais
-
-- Interface gráfica para usuários não técnicos.
-- Organização automática dos PDFs.
-- Extração de CNPJ e nome do cliente.
-- Automação do fluxo completo no RAE.
-- Configuração por unidade, projeto, ação e ano.
-- Base mapeada de unidades/projetos/ações do Sebrae-SP.
-- Logs em `AppData/Local/RAETurbo`.
+### Funcionalidades
+- Identificação automática de PDFs.
+- Extração de nome e CNPJ.
+- Classificação de documentos.
+- Diferenciação de CCMEI entre Formalização e Alteração pela Data de Abertura.
+- Organização por ano, mês, tipo e cliente.
+- Tratamento de documentos com erro.
+- Histórico de execuções em CSV.
+- Logs locais.
 - Atualização automática via GitHub Releases.
-- Build automatizado por GitHub Actions.
 
-## Desenvolvimento
-
+### Execução
 ```bash
 pip install -r requirements.txt
 python main.pyw
 ```
 
-## Nova versão
-
-```bash
-git add .
-git commit -m "prepara versão vx.x.x"
-git tag vx.x.x
-git push
-git push origin vx.x.x
-```
+A versão 2.0.0 não depende do Chrome, ChromeDriver ou do sistema RAE.

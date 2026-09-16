@@ -1,32 +1,20 @@
-## [v1.3.1] - 2026-05-15
+# Changelog
 
-### Adicionado
-- Adicionada leitura da **Data de Abertura** em arquivos CCMEI.
-- Adicionada função específica para interpretar arquivos CCMEI e retornar nome, CNPJ e data de abertura.
-- Adicionada classificação automática entre **Formalização** e **Alteração** para arquivos CCMEI.
-- Adicionada pasta de erro específica para CCMEI quando a Data de Abertura não puder ser identificada.
+## [2.0.0] - 2026-09-16
 
-### Melhorado
-- Melhorada a precisão na identificação do tipo de atendimento dos arquivos CCMEI.
-- O RAE Turbo agora diferencia formalização e alteração comparando a Data de Abertura do MEI com a data do arquivo.
-- Arquivos CCMEI não são mais classificados apenas pelo nome do arquivo.
-- Reduzido o risco de registrar atendimentos CCMEI com o serviço incorreto no RAE.
-- Melhorado o cálculo do tempo médio real dos atendimentos lançados.
-- O tempo médio real agora considera apenas atendimentos concluídos com sucesso no RAE.
+### Mudança de foco
+- O RAE Turbo passa a funcionar independentemente do sistema RAE.
+- O foco passa a ser a organização automatizada dos documentos de atendimento.
 
-### Corrigido
-- Corrigido problema em que arquivos CCMEI de alteração poderiam ser tratados incorretamente como formalização.
-- Corrigido problema em que arquivos CCMEI com o mesmo padrão de nome eram classificados de forma imprecisa.
-- Corrigido cálculo de tempo médio que considerava o tempo total da execução, incluindo pausas, login, reinicializações e demoras externas ao lançamento real.
+### Removido
+- Automação do preenchimento do RAE.
+- Chrome, ChromeDriver, Selenium e WebDriver Manager do fluxo ativo.
+- Login, plano orçamentário e demais etapas específicas do RAE.
 
-### Técnico
-- Criadas funções auxiliares no `extrator_pdf.py` para extração da Data de Abertura do CCMEI.
-- Atualizada a lógica do `orquestrador.py` para classificar CCMEI com base no conteúdo do PDF.
-- Adicionada proteção para impedir lançamento automático quando a Data de Abertura não for encontrada.
-- Mantida compatibilidade com o fluxo de envio de PDFs com erro para `_ERROS_RAE_TURBO`.
-
-### Observações
-- Para arquivos CCMEI, a classificação agora segue a regra:
-  - Data de Abertura igual à data do arquivo: **Formalização**.
-  - Data de Abertura diferente da data do arquivo: **Alteração**.
-- Recomenda-se validar se o serviço exato de alteração no RAE está configurado corretamente como `MEI - Alteração do MEI`.
+### Mantido
+- Identificação automática de PDFs.
+- Extração de nome e CNPJ.
+- Classificação de Formalização, Alteração, Declaração, DAS, Parcelamento e Baixa.
+- Regra de Data de Abertura para diferenciar CCMEI.
+- Organização por ano, mês, tipo e cliente.
+- Pasta de erros, logs, histórico e atualização automática.

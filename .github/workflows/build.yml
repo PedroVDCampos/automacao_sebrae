@@ -1,42 +1,32 @@
 name: Build e Publicar EXE
-
 on:
   push:
     tags:
       - "v*"
-
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
-      - name: Checkout do repositório
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Configurar Python 3.11
+      - name: Configurar Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Instalar dependências
+        shell: powershell
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install -r requirements.txt
-
-      - name: Compilar com PyInstaller
-        run: |
-          pyinstaller --onefile --noconsole --icon=assets/icone.ico `
-          --add-data "drivers/chromedriver.exe;drivers" `
-          --add-data "assets;assets" `
-          --add-data "data;data" `
-          --name="RAE_Turbo" main.pyw
-
+      - name: Compilar
+        shell: powershell
+        run: pyinstaller --clean --noconfirm RAE_Turbo.spec
       - name: Gerar SHA-256
         shell: powershell
-        run: |
-          Get-FileHash dist/RAE_Turbo.exe -Algorithm SHA256 | ForEach-Object { $_.Hash } > dist/RAE_Turbo.exe.sha256
-
+        run: (Get-FileHash "dist/RAE_Turbo.exe" -Algorithm SHA256).Hash | Out-File -Encoding ascii "dist/RAE_Turbo.exe.sha256"
       - name: Publicar Release
         uses: softprops/action-gh-release@v2
         with:
@@ -44,10 +34,4 @@ jobs:
             dist/RAE_Turbo.exe
             dist/RAE_Turbo.exe.sha256
           name: "RAE Turbo - ${{ github.ref_name }}"
-          body: |
-            ## 🚀 Nova versão: ${{ github.ref_name }}
-
-            O RAE Turbo verificará esta atualização automaticamente na próxima abertura.
-
-            Arquivo principal: `RAE_Turbo.exe`
-            Hash SHA-256 disponível em `RAE_Turbo.exe.sha256`.
+          generate_release_notes: true
