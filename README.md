@@ -1,8 +1,8 @@
-# RAE Turbo
+# Sebrae Turbo
 
 ## Organizador automatizado de documentos de atendimento
 
-O RAE Turbo identifica documentos PDF, extrai as informações necessárias e organiza os arquivos automaticamente por ano, mês, tipo de atendimento e cliente.
+O Sebrae Turbo identifica documentos PDF, extrai as informações necessárias e organiza os arquivos automaticamente por ano, mês, tipo de atendimento e cliente.
 
 ### Funcionalidades
 - Identificação automática de PDFs.
@@ -21,4 +21,4 @@ pip install -r requirements.txt
 python main.pyw
 ```
 
-A versão 2.0.0 não depende do Chrome, ChromeDriver ou do sistema RAE.
+A versão 2.0.0 não depende do Chrome, ChromeDriver ou do sistema Sebrae.
