@@ -33,5 +33,5 @@ jobs:
           files: |
             dist/RAE_Turbo.exe
             dist/RAE_Turbo.exe.sha256
-          name: "RAE Turbo - ${{ github.ref_name }}"
+          name: "Turbo - ${{ github.ref_name }}"
           generate_release_notes: true

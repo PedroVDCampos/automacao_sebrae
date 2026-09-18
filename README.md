@@ -1,8 +1,8 @@
-# Sebrae Turbo
+# Turbo
 
 ## Organizador automatizado de documentos de atendimento
 
-O Sebrae Turbo identifica documentos PDF, extrai as informações necessárias e organiza os arquivos automaticamente por ano, mês, tipo de atendimento e cliente.
+O Turbo identifica documentos PDF, extrai as informações necessárias e organiza os arquivos automaticamente por ano, mês, tipo de atendimento e cliente.
 
 ### Funcionalidades
 - Identificação automática de PDFs.

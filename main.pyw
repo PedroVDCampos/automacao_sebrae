@@ -12,14 +12,14 @@ ctk.set_default_color_theme("blue")
 
 class App(ctk.CTk):
     def __init__(self):
-        super().__init__(); self.title(f"Sebrae Turbo - v{VERSAO_ATUAL}"); self.geometry("620x610"); self.minsize(620,610)
+        super().__init__(); self.title(f"Turbo - v{VERSAO_ATUAL}"); self.geometry("620x610"); self.minsize(620,610)
         try:self.iconbitmap(resource_path("assets/icone.ico"))
         except Exception:pass
         self.evento_cancelar=threading.Event(); self.processando=False; self._montar_ui()
         self.after(1500, lambda: threading.Thread(target=verificar_atualizacao,daemon=True).start())
     def _montar_ui(self):
         self.grid_columnconfigure(0,weight=1)
-        ctk.CTkLabel(self,text="Sebrae Turbo",font=ctk.CTkFont(size=28,weight="bold")).grid(row=0,column=0,pady=(25,4))
+        ctk.CTkLabel(self,text="Turbo",font=ctk.CTkFont(size=28,weight="bold")).grid(row=0,column=0,pady=(25,4))
         ctk.CTkLabel(self,text="Organizador automatizado de documentos",font=ctk.CTkFont(size=14)).grid(row=1,column=0,pady=(0,20))
         self._campo("Pasta de origem:","entrada_origem",2); self._campo("Pasta de destino:","entrada_destino",4)
         ctk.CTkLabel(self,text="Processar arquivos a partir de (DD/MM/AAAA):",anchor="w").grid(row=6,column=0,sticky="w",padx=35,pady=5)
@@ -65,8 +65,8 @@ class App(ctk.CTk):
         try:os.startfile(p) if sys.platform=="win32" else subprocess.Popen(["xdg-open",p])
         except Exception as e:messagebox.showerror("Histórico",str(e))
     def abrir_sobre(self):
-        w=ctk.CTkToplevel(self);w.title("Sobre o Sebrae Turbo");w.geometry("500x380");w.resizable(False,False);w.grab_set()
-        ctk.CTkLabel(w,text="Sebrae Turbo",font=ctk.CTkFont(size=26,weight="bold")).pack(pady=(30,5));ctk.CTkLabel(w,text=f"Versão {VERSAO_ATUAL}").pack(pady=(0,20))
+        w=ctk.CTkToplevel(self);w.title("Sobre o Turbo");w.geometry("500x380");w.resizable(False,False);w.grab_set()
+        ctk.CTkLabel(w,text="Turbo",font=ctk.CTkFont(size=26,weight="bold")).pack(pady=(30,5));ctk.CTkLabel(w,text=f"Versão {VERSAO_ATUAL}").pack(pady=(0,20))
         ctk.CTkLabel(w,text="Organizador automatizado de documentos de atendimento.\n\nIdentifica PDFs, extrai os dados necessários e organiza os documentos por ano, mês, tipo e cliente.\n\nO processamento documental é realizado localmente e não depende do sistema RAE.",wraplength=420,justify="left").pack(padx=35,pady=10)
         ctk.CTkButton(w,text="Fechar",command=w.destroy).pack(pady=20)
 

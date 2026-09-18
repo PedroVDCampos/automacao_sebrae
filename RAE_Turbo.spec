@@ -4,6 +4,9 @@ from PyInstaller.utils.hooks import collect_all
 datas=[]
 binaries=[]
 hiddenimports=[]
+
+datas.append(("assets/icone.ico", "assets"))
+
 tmp=collect_all("customtkinter")
 datas += tmp[0]
 binaries += tmp[1]
@@ -29,6 +32,7 @@ exe=EXE(
     a.datas,
     [],
     name="RAE_Turbo",
+    icon="assets/icone.ico",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
