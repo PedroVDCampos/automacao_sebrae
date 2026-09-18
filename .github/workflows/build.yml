@@ -19,7 +19,7 @@ jobs:
         shell: powershell
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller
+          pip install -r requirements.txt
           pip install -r requirements.txt
       - name: Compilar
         shell: powershell
@@ -33,5 +33,5 @@ jobs:
           files: |
             dist/RAE_Turbo.exe
             dist/RAE_Turbo.exe.sha256
-          name: "Turbo - ${{ github.ref_name }}"
+          name: "RAE Turbo - ${{ github.ref_name }}"
           generate_release_notes: true
